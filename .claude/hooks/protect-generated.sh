@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# PreToolUse (Edit|Write): generated files must come from their generator, not from hand edits.
-# Exit 2 = blocked, message goes back to Claude.
-file=$(node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).tool_input?.file_path??"")}catch{console.log("")}})')
+# Edit/Write guard, run by pre-edit.sh with the file path as $1: generated files must come from
+# their generator, not from hand edits. Exit 2 = blocked, message goes back to Claude.
+file="${1//\\//}"
 case "$file" in
   */pnpm-lock.yaml)
     echo "pnpm-lock.yaml is generated. Change package.json and run pnpm install instead." >&2; exit 2 ;;
