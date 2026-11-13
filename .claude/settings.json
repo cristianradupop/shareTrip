@@ -1,8 +1,10 @@
 {
   "permissions": {
-    "deny": [
+    "ask": [
       "Bash(git push)",
-      "Bash(git push *)",
+      "Bash(git push *)"
+    ],
+    "deny": [
       "Read(**/.env)",
       "Read(**/.env.local)",
       "Read(**/.env.*.local)",

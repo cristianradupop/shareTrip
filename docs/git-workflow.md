@@ -15,7 +15,7 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
    git switch -c feat/12-join-trip        # <type>/<short-slug>, issue number recommended
    ```
    Types: `feat`, `fix`, `chore`, `docs`, `ci`, `refactor`. Any branch name except `main` can be pushed; the issue number is a convention, not enforced. One change, one branch, one PR. For harness work the spec folder uses the same slug: `specs/join-trip/`.
-3. **Work and commit** on the branch. Small commits, imperative subject (`Add join button to feed card`). The `pre-commit` hook runs `pnpm check`; fix, don't `--no-verify`. Agents never commit or push: the human does.
+3. **Work and commit** on the branch. Small commits, imperative subject (`Add join button to feed card`). The `pre-commit` hook runs `pnpm check`; fix, don't `--no-verify`. Agents commit or push only when the human explicitly asks; `git push` always prompts for confirmation.
 4. **Push the branch** to GitHub: `git push -u origin feat/12-join-trip`.
 5. **Open the pull request** (GitHub prints the link after the push) into `main`. Fill the template, write `Closes #12` so the issue closes on merge. CI starts automatically on the PR.
 6. **CI runs on the server** (`.github/workflows/ci.yml`): `check` (lint, types, unit tests), `migrations` (Drizzle history), `e2e` (build + Playwright smoke), plus `security` and `dependency-review`. Required: `check`, `migrations`, `e2e`. Red: fix on the same branch and push again; the PR re-runs by itself.
