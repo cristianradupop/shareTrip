@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 # Same gate as CI and the Claude Code Stop hook: lint + types + unit tests.
 # Enabled by `pnpm install` (the "prepare" script sets core.hooksPath). Bypass only in emergencies: git commit --no-verify
+branch=$(git branch --show-current)
+if [ "$branch" = "main" ]; then
+  echo "pre-commit: refusing to commit on main. Create a branch first:" >&2
+  echo "  git fetch origin && git switch main && git pull --ff-only && git switch -c <type>/<slug>" >&2
+  echo "(move your changes with: git switch -c <type>/<slug>; uncommitted work comes along)" >&2
+  exit 1
+fi
 echo "pre-commit: pnpm check"
 exec pnpm check --silent

@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Git: branch first (all AI agents)
+
+Before creating or editing any file, branch from an up-to-date main: `git fetch origin && git switch main && git pull --ff-only && git switch -c <type>/<slug>`. Never work on `main`. If tracked files are dirty or `main` cannot fast-forward, stop and tell the user. Commit/push only on explicit request. Details: `docs/git-workflow.md`.
