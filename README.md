@@ -22,7 +22,9 @@ Demo login: `alex.popescu@demo.test` (or username `alex`) / `Demo-Pass-123!`. Ad
 | `pnpm db:generate` | create a SQL migration after changing `src/db/schema` (commit the file in `drizzle/`) |
 | `pnpm db:migrate` | apply migrations (uses `DIRECT_URL`, session pooler :5432) |
 | `pnpm db:studio` | visual database browser (Drizzle Studio) |
-| `pnpm typecheck` / `pnpm lint` / `pnpm build` | checks to run before a PR |
+| `pnpm check` | lint + typecheck + unit tests (Vitest); the gate used by the pre-commit hook and CI |
+| `pnpm e2e` | Playwright smoke tests against the production build (`pnpm build` first; no DB needed) |
+| `pnpm test:file <path>` | run a single unit test file |
 
 ## Zones and owners
 
@@ -54,3 +56,20 @@ Rules: edit your own zone; changes to shared files (schema, `src/lib/auth.ts`, `
 - **Security:** `src/proxy.ts` is only a redirect. Every admin page and action calls `requireAdmin()` / `assertAdmin()`.
 - **Photos:** JPG/PNG, max 2 MB, checked in the browser and again on the server (file signature).
 - **Deploy:** live at https://share-trip-inky.vercel.app (Vercel Hobby, project `share-trip`, auto-deploys on push to `main`; `vercel.json` pins `fra1`). Set the same variables as `.env.example` (`BETTER_AUTH_URL` = production URL) and pick the Frankfurt function region (`fra1`) to be near Supabase.
+
+## Workflow and CI/CD
+
+Features follow a nine-step agentic workflow with two human gates (plan, approve). In Claude Code: describe the change or run `/harness <ask>`; details in `CLAUDE.md` (Workflow) and `.claude/skills/harness/SKILL.md`.
+
+| Step | Who | Where |
+|---|---|---|
+| 1 Context · 2 **Plan** (you approve) · 3 Implement (tests first) · 4 Verify · 5 Review · 6 Learn | agents + you at the plan gate | `specs/<slug>/`, `docs/adr/`, `docs/learnings.md` |
+| 7 Check | local, forced | Claude Code `Stop` hook and git `pre-commit` (`.githooks/`), both run `pnpm check` |
+| 8 **Approve** | you | PR template: you must be able to explain the change |
+| 9 Release | CI, cannot be skipped | `.github/workflows/ci.yml` (check, migrations, e2e, security), then Vercel deploy and `migrate.yml` |
+
+**Git flow:** issue -> branch from `main` -> push -> pull request -> CI on GitHub -> squash merge on GitHub (steps and rules: [`docs/git-workflow.md`](docs/git-workflow.md)).
+
+**Pipeline:** PR -> CI (`check`, `migrations`, `e2e` required) -> merge to `main` -> Vercel deploys -> post-deploy smoke (`deploy-smoke.yml`). When `drizzle/**` changes, `migrate.yml` applies the migrations to Supabase; they must be backward compatible because deploy and migration start together.
+
+**One-time repository setup (GitHub UI):** Settings -> Branches/Rules: require a pull request and the status checks `check`, `migrations`, `e2e` on `main`. Settings -> Environments: create `production` and add the secret `DIRECT_URL` (Supabase session pooler, port 5432). Hooks are enabled automatically by `pnpm install`.

@@ -1,0 +1,26 @@
+# After Vercel reports a successful Production deployment, check that the site really answers.
+name: Post-deploy smoke
+
+on:
+  deployment_status
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Landing and login answer 200, protected area redirects
+        env:
+          URL: ${{ github.event.deployment_status.environment_url }}
+        run: |
+          set -euo pipefail
+          test -n "$URL"
+          code() { curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 5 "$@"; }
+          [ "$(code "$URL/")" = "200" ]       || { echo "landing is not 200"; exit 1; }
+          [ "$(code "$URL/login")" = "200" ]  || { echo "login is not 200"; exit 1; }
+          [ "$(code "$URL/admin")" = "307" ] || [ "$(code "$URL/admin")" = "302" ] || { echo "/admin does not redirect"; exit 1; }
+          echo "OK: $URL"
