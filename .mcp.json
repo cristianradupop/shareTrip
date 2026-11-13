@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@0.0.85", "--headless"]
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from", "git+https://github.com/oraios/serena@v2.1.0",
+        "serena", "start-mcp-server",
+        "--context", "ide-assistant",
+        "--project-from-cwd"
+      ]
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}",
+        "X-MCP-Readonly": "true",
+        "X-MCP-Toolsets": "repos,issues,pull_requests,actions"
+      }
+    }
+  }
+}

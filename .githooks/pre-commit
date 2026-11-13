@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Same gate as CI and the Claude Code Stop hook: lint + types + unit tests.
+# Enabled by `pnpm install` (the "prepare" script sets core.hooksPath). Bypass only in emergencies: git commit --no-verify
+echo "pre-commit: pnpm check"
+exec pnpm check --silent
