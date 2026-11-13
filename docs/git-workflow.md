@@ -33,5 +33,16 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
 ## One-time GitHub settings (repository owner)
 
 Settings -> General -> Pull Requests: allow **squash merging** only, enable **Automatically delete head branches**.
-Settings -> Rules (or Branches) -> `main`: require a pull request, require status checks `check`, `migrations`, `e2e` (branches must be up to date), block force pushes and deletions.
+
+Settings -> Rules -> Rulesets, two rulesets, **Enforcement: Active**, empty bypass list (so it binds the owner too):
+
+1. **`protect-main`**, target: default branch.
+   - Restrict deletions, Block force pushes.
+   - Require a pull request before merging (0 approvals while the team is two people; raise it later).
+   - Require status checks to pass: `check`, `migrations`, `e2e`, branch up to date. (They are listed only after CI has run once, so add them after the first PR's CI run.)
+   - Result: nobody can push to `main`, only merge a pull request.
+2. **`issue-branches`**, target: all branches except the default one (pattern `~DEFAULT_BRANCH` excluded).
+   - Require branch names to match (Regex): `^(feat|fix|chore|docs|ci|refactor)/[0-9]+-[a-z0-9-]+$`
+   - Result: only branches named after an issue (`feat/12-join-trip`) can be created and pushed.
+
 Settings -> Environments -> `production`: secret `DIRECT_URL`.
