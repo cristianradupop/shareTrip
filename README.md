@@ -53,4 +53,4 @@ Rules: edit your own zone; changes to shared files (schema, `src/lib/auth.ts`, `
 - **Database access:** server code only. The app connects with the Supabase *transaction pooler* (`DATABASE_URL`, port 6543). `postgres.js` must run with `prepare: false` and `max_pipeline: 1` (see `src/db/client.ts`), otherwise concurrent queries hang.
 - **Security:** `src/proxy.ts` is only a redirect. Every admin page and action calls `requireAdmin()` / `assertAdmin()`.
 - **Photos:** JPG/PNG, max 2 MB, checked in the browser and again on the server (file signature).
-- **Deploy:** Vercel Hobby, one project. Set the same variables as `.env.example` (`BETTER_AUTH_URL` = production URL) and pick the Frankfurt function region (`fra1`) to be near Supabase.
+- **Deploy:** live at https://share-trip-inky.vercel.app (Vercel Hobby, project `share-trip`, auto-deploys on push to `main`; `vercel.json` pins `fra1`). Set the same variables as `.env.example` (`BETTER_AUTH_URL` = production URL) and pick the Frankfurt function region (`fra1`) to be near Supabase.
