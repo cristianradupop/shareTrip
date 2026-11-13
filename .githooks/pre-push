@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Never push main; every change goes through a branch and a pull request (docs/git-workflow.md).
+while read -r _ _ remote_ref _; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "pre-push: pushing to main is not allowed. Push a branch and open a PR." >&2
+    exit 1
+  fi
+done
+exit 0
