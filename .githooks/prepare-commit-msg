@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Runs for every commit git creates locally, including merge, cherry-pick, revert and commit --no-verify,
+# so this is where main is refused for all of them.
+exec "$(dirname "$0")/lib/refuse-main.sh" prepare-commit-msg
