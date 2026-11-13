@@ -8,6 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run --reporter=dot",
+    "test:file": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "prepare": "git config core.hooksPath .githooks || true",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:check": "drizzle-kit check",
@@ -39,6 +45,7 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -49,7 +56,11 @@
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.0"
   },
-  "packageManager": "pnpm@12.18.0"
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  }
 }
