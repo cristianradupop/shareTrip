@@ -56,7 +56,7 @@ Edit your own zone; changes to shared files (`src/db/schema`, `src/lib/auth.ts`,
 - Specs and plans: `specs/<slug>/`. Decisions: `docs/adr/`. Mistakes not to repeat: `docs/learnings.md`, read before planning.
 - Roles: `.claude/agents/harness-*.md`. LEARN may refine them, with approval; it never loosens them or touches hooks, settings or CI.
 - Agents never commit or push. A human does, after reviewing the change. Keep this file under 200 lines.
-- Git: issue -> branch `<type>/<issue-number>-<slug>` from `main` -> push branch -> PR (`Closes #n`) -> CI on GitHub -> squash merge on GitHub. Never work on `main`; full steps in `docs/git-workflow.md`.
+- Git: issue -> branch `<type>/<slug>` from `main` (any name but `main`) -> push branch -> PR (`Closes #n`) -> CI on GitHub -> squash merge on GitHub. Never work on `main`; full steps in `docs/git-workflow.md`.
 - Release: PR into `main` -> CI (`.github/workflows/ci.yml`) must be green -> merge -> Vercel deploys; migrations in `drizzle/` are applied by `.github/workflows/migrate.yml` and must be backward compatible (add first, remove in a later release), because deploy and migration start together.
 
 ## MCP servers (`.mcp.json`)

@@ -1,6 +1,6 @@
 # Git workflow
 
-One rule: **`main` only changes through a merged pull request with a green pipeline.** Nobody pushes to `main`, not even the owner (branch protection enforces it).
+One rule: **`main` only changes through a merged pull request with a green pipeline.** Nobody pushes to `main`, not even the owner (a GitHub ruleset enforces it); every other branch can be pushed freely.
 
 ```
 issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the server  ->  merge on GitHub  ->  main  ->  Vercel deploy
@@ -12,9 +12,9 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
 2. **Branch from an up-to-date `main`.**
    ```bash
    git switch main && git pull --ff-only
-   git switch -c feat/12-join-trip        # <type>/<issue-number>-<short-slug>
+   git switch -c feat/12-join-trip        # <type>/<short-slug>, issue number recommended
    ```
-   Types: `feat`, `fix`, `chore`, `docs`, `ci`, `refactor`. One issue, one branch, one PR. For harness work the spec folder uses the same slug: `specs/12-join-trip/`.
+   Types: `feat`, `fix`, `chore`, `docs`, `ci`, `refactor`. Any branch name except `main` can be pushed; the issue number is a convention, not enforced. One change, one branch, one PR. For harness work the spec folder uses the same slug: `specs/join-trip/`.
 3. **Work and commit** on the branch. Small commits, imperative subject (`Add join button to feed card`). The `pre-commit` hook runs `pnpm check`; fix, don't `--no-verify`. Agents never commit or push: the human does.
 4. **Push the branch** to GitHub: `git push -u origin feat/12-join-trip`.
 5. **Open the pull request** (GitHub prints the link after the push) into `main`. Fill the template, write `Closes #12` so the issue closes on merge. CI starts automatically on the PR.
@@ -34,15 +34,10 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
 
 Settings -> General -> Pull Requests: allow **squash merging** only, enable **Automatically delete head branches**.
 
-Settings -> Rules -> Rulesets, two rulesets, **Enforcement: Active**, empty bypass list (so it binds the owner too):
-
-1. **`protect-main`**, target: default branch.
-   - Restrict deletions, Block force pushes.
-   - Require a pull request before merging (0 approvals while the team is two people; raise it later).
-   - Require status checks to pass: `check`, `migrations`, `e2e`, branch up to date. (They are listed only after CI has run once, so add them after the first PR's CI run.)
-   - Result: nobody can push to `main`, only merge a pull request.
-2. **`issue-branches`**, target: all branches except the default one (pattern `~DEFAULT_BRANCH` excluded).
-   - Require branch names to match (Regex): `^(feat|fix|chore|docs|ci|refactor)/[0-9]+-[a-z0-9-]+$`
-   - Result: only branches named after an issue (`feat/12-join-trip`) can be created and pushed.
+Settings -> Rules -> Rulesets -> one ruleset, **`protect-main`**, **Enforcement: Active**, empty bypass list (so it binds the owner too), target: default branch:
+- Restrict deletions, Block force pushes.
+- Require a pull request before merging (0 approvals while the team is two people; raise it later).
+- Require status checks to pass, branch up to date: `check`, `migrations`, `e2e`. They are listed only after CI has run once, so add them after the first PR's CI run.
+- Result: nobody can push to `main`; it only changes by merging a pull request whose pipeline is green. Other branches are unrestricted.
 
 Settings -> Environments -> `production`: secret `DIRECT_URL`.
