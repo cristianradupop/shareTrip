@@ -6,6 +6,6 @@ case "$file" in
   */pnpm-lock.yaml)
     echo "pnpm-lock.yaml is generated. Change package.json and run pnpm install instead." >&2; exit 2 ;;
   */drizzle/*)
-    echo "drizzle/ is generated. Edit src/db/schema/* and run pnpm db:generate; never hand-edit an applied migration." >&2; exit 2 ;;
+    echo "drizzle/ is generated. Edit server-admin/src/db/schema/* and run pnpm db:generate; never hand-edit an applied migration." >&2; exit 2 ;;
 esac
 exit 0

@@ -28,6 +28,7 @@ Two to four options each. If nothing needs asking, return `No questions.`
 - Name the coupling: what else must change when this changes (types, serializers, migrations, config, docs, other callers).
 - When there is a real design choice, weigh 2-3 options with their risks, and pick one.
 - Prefer the smallest change that meets the spec. No speculative abstractions, no unrelated refactors.
+- On large changes, budget your turns: by about 30 tool calls, stop reading and write the plan, marking what you did not verify as unverified.
 - If something is still ambiguous, list it under Open questions, marked `[blocking]` if the human must answer it before approving. Don't guess.
 
 Return the plan in exactly this shape, at most 70 lines:

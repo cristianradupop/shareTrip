@@ -28,8 +28,8 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
 
 - Never commit to `main`, never force-push a shared branch, never merge your own PR with red checks.
 - Keep PRs small (about a day of work). A schema change ships with its generated migration (`pnpm db:generate`) in the same PR.
-- Shared files (`src/db/schema`, `src/lib/auth.ts`, `src/components/ui`, root layout, `.github/`, `.claude/`) go in their own small PRs.
-- Secrets never go in a commit; they live in `.env.local`, Vercel and GitHub Environments.
+- Shared files (`server-admin/src/db/schema`, `server-admin/src/lib/auth.ts`, `server-admin/src/components/ui`, root layout, `.github/`, `.claude/`) go in their own small PRs.
+- Secrets never go in a commit; they live in `server-admin/.env.local`, Vercel and GitHub Environments.
 
 ## One-time GitHub settings (repository owner)
 

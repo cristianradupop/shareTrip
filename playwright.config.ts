@@ -26,7 +26,7 @@ export default defineConfig({
   ],
   webServer: {
     // Build once (CI does it in its own step), then serve the production build.
-    command: `pnpm exec next start -p ${PORT}`,
+    command: `pnpm --filter server-admin exec next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
     env: dummyEnv,
     reuseExistingServer: !process.env.CI,

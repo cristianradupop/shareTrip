@@ -6,25 +6,25 @@ TripTogether (package name `tripshare`): Next.js 16 / React 19 proof-of-concept 
 
 ## Next.js is not the one you know
 
-Next 16.4 has breaking changes (see `AGENTS.md`). Read the relevant guide in `node_modules/next/dist/docs/` before writing Next-specific code. Example already in the repo: `src/proxy.ts` replaces `middleware.ts`.
+Next 16.4 has breaking changes (see `AGENTS.md`). Read the relevant guide in `server-admin/node_modules/next/dist/docs/` before writing Next-specific code. Example already in the repo: `server-admin/src/proxy.ts` replaces `middleware.ts`.
 
 ## Commands
 
-Package manager is pnpm (`packageManager` is pinned); Node 24 (`.nvmrc`).
+Package manager is pnpm (`packageManager` is pinned); Node 24 (`.nvmrc`). The repo is a pnpm workspace: the Next app lives in `server-admin/` (a backend-only `server-app/` is planned for a later PR); `drizzle/` (migrations), `e2e/` and `playwright.config.ts` stay at the root. Run every command below from the repo root; the root `package.json` delegates to `server-admin`.
 
 - `pnpm dev` / `pnpm build` / `pnpm start`
 - `pnpm lint` · `pnpm typecheck` (runs `next typegen` first, then `tsc --noEmit`)
-- `pnpm test` (Vitest, `src/**/*.test.ts`, no DB: `@/db/client` is mocked) · `pnpm test:file src/lib/format.test.ts` for one file
+- `pnpm test` (Vitest, `server-admin/src/**/*.test.ts`, no DB: `@/db/client` is mocked) · `pnpm test:file server-admin/src/lib/format.test.ts` for one file
 - `pnpm e2e` (Playwright smoke in `e2e/`, serves the production build on :3100, so run `pnpm build` first; needs no DB or secrets)
 - `pnpm check` = lint + typecheck + unit tests; the same gate runs locally (hooks) and in CI
-- Database (Drizzle, uses `DIRECT_URL`): `pnpm db:generate` after editing `src/db/schema/*`, commit the new SQL in `drizzle/`; `pnpm db:migrate`; `pnpm db:check`; `pnpm db:studio`
-- Scripts (read `.env.local` via `tsx --env-file`): `pnpm db:seed-admin`, `pnpm db:seed-demo`, `pnpm db:setup-storage`
+- Database (Drizzle, uses `DIRECT_URL`): `pnpm db:generate` after editing `server-admin/src/db/schema/*`, commit the new SQL in `drizzle/`; `pnpm db:migrate`; `pnpm db:check`; `pnpm db:studio`
+- Scripts (read `server-admin/.env.local` via `tsx --env-file`): `pnpm db:seed-admin`, `pnpm db:seed-demo`, `pnpm db:setup-storage`
 
-Secrets live only in `.env.local`; `.env.example` lists every variable. `BETTER_AUTH_URL` must equal the deployed URL in production.
+Secrets live only in `server-admin/.env.local`; `server-admin/.env.example` lists every variable. `BETTER_AUTH_URL` must equal the deployed URL in production.
 
 ## Architecture
 
-One Next.js app with route-group "zones" under `src/app/`: `(main)` landing, `(auth)` login/signup, `(organizer)`, `(joiner)` (placeholder, another developer builds it), `admin`, shared `feed`, plus `api/auth/[...all]` (Better Auth handler). Mutations are Server Actions in `src/app/actions/{auth,trips,admin}.ts`; there is no REST API besides the auth handler.
+One Next.js app with route-group "zones" under `server-admin/src/app/` (all `src/` and config paths below are relative to `server-admin/`): `(main)` landing, `(auth)` login/signup, `(organizer)`, `(joiner)` (placeholder, another developer builds it), `admin`, shared `feed`, plus `api/auth/[...all]` (Better Auth handler). Mutations are Server Actions in `src/app/actions/{auth,trips,admin}.ts`; there is no REST API besides the auth handler.
 
 **Auth and authorization** (spans `src/lib/auth.ts`, `src/lib/session.ts`, `src/proxy.ts`):
 - Better Auth with Drizzle adapter, `username` + `admin` plugins, email/password (min 10 chars, no email verification). `nextCookies()` must stay last in the plugins list so Server Actions can set cookies. Rate limiting is stored in the DB because in-memory does not work on serverless.
@@ -43,7 +43,7 @@ One Next.js app with route-group "zones" under `src/app/`: `(main)` landing, `(a
 
 ## Rules for shared files
 
-Edit your own zone; changes to shared files (`src/db/schema`, `src/lib/auth.ts`, `src/components/ui`, root layout) go in small PRs. The Joiner developer plugs into `FeedTripCard`'s `action` slot and adds `chats`/`messages` tables; keep `trip_members` and that slot stable.
+Edit your own zone; changes to shared files (`server-admin/src/db/schema`, `server-admin/src/lib/auth.ts`, `server-admin/src/components/ui`, root layout) go in small PRs. The Joiner developer plugs into `FeedTripCard`'s `action` slot and adds `chats`/`messages` tables; keep `trip_members` and that slot stable.
 
 ## Workflow
 
