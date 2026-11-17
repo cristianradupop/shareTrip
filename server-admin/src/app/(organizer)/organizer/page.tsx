@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { OrganizerTripCard } from "@/components/trips/organizer-trip-card";
 import { CreateTripButton } from "@/components/trips/create-trip-dialog";
-import { getOrganizerStats, getOrganizerTrips } from "@/data/trips";
+import type { OrganizerStats, OrganizerTrip } from "server-app/shared";
+import { apiGet } from "@/lib/api";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Organizer" };
@@ -11,7 +12,10 @@ export const metadata: Metadata = { title: "Organizer" };
 export default async function OrganizerDashboard({ searchParams }: PageProps<"/organizer">) {
   const user = await requireUser();
   const { new: openNew } = await searchParams;
-  const [stats, trips] = await Promise.all([getOrganizerStats(user.id), getOrganizerTrips(user.id, 6)]);
+  const [{ stats }, { trips }] = await Promise.all([
+    apiGet<{ stats: OrganizerStats }>("/api/organizer/stats"),
+    apiGet<{ trips: OrganizerTrip[] }>("/api/organizer/trips?limit=6"),
+  ]);
 
   return (
     <div className="space-y-8">

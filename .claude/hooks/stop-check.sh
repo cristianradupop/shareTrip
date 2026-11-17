@@ -11,11 +11,11 @@ if printf '%s' "$input" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on(
 fi
 
 # Only code/config changes need the full check.
-changed=$(git status --porcelain -- server-admin e2e drizzle package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json vitest.config.mts playwright.config.ts 2>/dev/null)
+changed=$(git status --porcelain -- server-admin server-app e2e package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json vitest.config.mts playwright.config.ts 2>/dev/null)
 [ -z "$changed" ] && exit 0
 
 # Run each check once per code state.
-state=$( (git diff HEAD -- . ':!.claude'; git ls-files --others --exclude-standard -- server-admin e2e drizzle | xargs -I{} sh -c 'echo "$1"; cat "$1"' _ {}) 2>/dev/null | shasum | cut -d' ' -f1)
+state=$( (git diff HEAD -- . ':!.claude'; git ls-files --others --exclude-standard -- server-admin server-app e2e | xargs -I{} sh -c 'echo "$1"; cat "$1"' _ {}) 2>/dev/null | shasum | cut -d' ' -f1)
 stamp="$(git rev-parse --git-dir)/claude-check-ok"
 [ -f "$stamp" ] && [ "$(cat "$stamp")" = "$state" ] && exit 0
 

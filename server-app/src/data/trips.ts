@@ -2,6 +2,7 @@ import "server-only";
 import { and, asc, count, desc, eq, getTableColumns, gt, gte, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, trips, user } from "@/db/schema";
+import type { FeedSort, FeedTrip, OrganizerStats, OrganizerTrip } from "@/shared/types";
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -15,18 +16,18 @@ const joinedExpr = sql<number>`coalesce(${joinedCounts.n}, 0)`.mapWith(Number);
 
 // ---------------- Organizer dashboard ----------------
 
-export async function getOrganizerTrips(organizerId: string, limit?: number) {
+export async function getOrganizerTrips(organizerId: string, limit?: number): Promise<OrganizerTrip[]> {
   const query = db
     .select({ ...getTableColumns(trips), joined: joinedExpr })
     .from(trips)
     .leftJoin(joinedCounts, eq(joinedCounts.tripId, trips.id))
     .where(eq(trips.organizerId, organizerId))
     .orderBy(desc(trips.createdAt));
-  return limit ? query.limit(limit) : query;
+  const rows = await (limit ? query.limit(limit) : query);
+  return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
 }
-export type OrganizerTrip = Awaited<ReturnType<typeof getOrganizerTrips>>[number];
 
-export async function getOrganizerStats(organizerId: string) {
+export async function getOrganizerStats(organizerId: string): Promise<OrganizerStats> {
   const [row] = await db
     .select({
       trips: count(trips.id),
@@ -40,8 +41,6 @@ export async function getOrganizerStats(organizerId: string) {
 }
 
 // ---------------- Community feed ----------------
-
-export type FeedSort = "asc" | "desc";
 
 const feedColumns = {
   id: trips.id,
@@ -79,8 +78,6 @@ type FeedRow = {
   organizerImage: string | null;
 };
 
-/** JSON-safe shape that can be passed to client components. */
-export type FeedTrip = Omit<FeedRow, "createdAt"> & { createdAt: string };
 const toFeedTrip = (r: FeedRow): FeedTrip => ({ ...r, createdAt: r.createdAt.toISOString() });
 
 export const FEED_PAGE_SIZE = 8;

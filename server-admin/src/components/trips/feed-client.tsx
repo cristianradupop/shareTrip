@@ -4,11 +4,11 @@ import { ArrowDownUp, Filter, RefreshCw } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { loadMoreFeedAction, refreshFeedAction } from "@/app/actions/trips";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FeedTripCard } from "@/components/trips/feed-trip-card";
-import type { FeedSort, FeedTrip } from "@/data/trips";
+import type { FeedSort, FeedTrip } from "server-app/shared";
+import { clientFetch } from "@/lib/client-api";
 
 const ALL = "__all__";
 const SORT_ITEMS = [
@@ -16,6 +16,12 @@ const SORT_ITEMS = [
   { value: "desc", label: "Farthest to most recent departure date" },
 ];
 const ERROR_MESSAGE = "Sorry, but for the moment we don't have information for you";
+
+function query(params: Record<string, string | undefined>) {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
+  return q.toString();
+}
 
 export function FeedClient({
   initialTrips,
@@ -53,7 +59,9 @@ export function FeedClient({
   function refresh() {
     startRefresh(async () => {
       try {
-        const { trips: fresh, now } = await refreshFeedAction({ since, city });
+        const res = await clientFetch<{ trips: FeedTrip[]; now: string }>(`/api/feed/since?${query({ since, city })}`);
+        if (!res.ok) throw new Error(res.error);
+        const { trips: fresh, now } = res;
         setSince(now);
         const known = new Set(trips.map((t) => t.id));
         const added = fresh.filter((t) => !known.has(t.id));
@@ -76,7 +84,11 @@ export function FeedClient({
     if (!cursor) return;
     startLoadMore(async () => {
       try {
-        const page = await loadMoreFeedAction({ city, sort, cursor });
+        const res = await clientFetch<{ trips: FeedTrip[]; nextCursor: string | null }>(
+          `/api/feed?${query({ city, sort, cursor })}`,
+        );
+        if (!res.ok) throw new Error(res.error);
+        const page = res;
         const known = new Set(trips.map((t) => t.id));
         setTrips([...trips, ...page.trips.filter((t) => !known.has(t.id))]);
         setCursor(page.nextCursor);

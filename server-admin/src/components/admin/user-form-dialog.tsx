@@ -1,18 +1,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { createUserAction, updateUserAction } from "@/app/actions/admin";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { AdminUserRow } from "@/data/users";
-import { adminUserSchema, signUpSchema } from "@/lib/validators";
+import { adminUserSchema, signUpSchema, type AdminUserRow } from "server-app/shared";
+import { clientFetch } from "@/lib/client-api";
 
 const createSchema = adminUserSchema.extend({ password: signUpSchema.shape.password });
 const editSchema = adminUserSchema.extend({
@@ -74,6 +74,7 @@ export function UserFormDialog({
 
 function UserForm({ user, onClose }: { user?: AdminUserRow; onClose: () => void }) {
   const editing = Boolean(user);
+  const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -88,12 +89,14 @@ function UserForm({ user, onClose }: { user?: AdminUserRow; onClose: () => void 
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
-    const result = user ? await updateUserAction(user.id, values) : await createUserAction(values);
+    const result = user ? await clientFetch(`/api/admin/users/${user.id}`, { method: "PATCH", json: values })
+      : await clientFetch("/api/admin/users", { json: values });
     if (!result.ok) {
       setServerError(result.error);
       return;
     }
     toast.success(user ? "User updated" : "User created");
+    router.refresh();
     onClose();
   }
 

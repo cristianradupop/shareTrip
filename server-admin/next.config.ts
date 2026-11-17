@@ -1,10 +1,18 @@
 import type { NextConfig } from "next";
 
+const serverAppUrl = process.env.SERVER_APP_URL ?? "http://localhost:3001";
+
+// Rewrites are compiled into the build, so a deployment without the variable would proxy to localhost.
+if (process.env.VERCEL_ENV && !process.env.SERVER_APP_URL) {
+  throw new Error("SERVER_APP_URL is required to build on Vercel");
+}
+
 const nextConfig: NextConfig = {
   // Cache Components is intentionally off: simple request-time rendering for this CRUD app.
-  experimental: {
-    // Signup uploads a profile photo (max 2 MB) through a Server Action.
-    serverActions: { bodySizeLimit: "3mb" },
+  transpilePackages: ["server-app"],
+  // The browser only talks to this origin; /api/* is proxied to server-app.
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: `${serverAppUrl}/api/:path*` }];
   },
   turbopack: {
     rules: {

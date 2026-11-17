@@ -56,12 +56,12 @@ The work ships as two PRs. **PR 1** (current branch `refactor/server-app-server-
 5. Merges once CI is green and watches `deploy-smoke`. Production keeps serving the previous deployment until the new build succeeds.
 
 ### PR 2: server-app plus REST (new branch from `main` after PR 1 merges)
-- [ ] **T3 Scaffold server-app and move server code.**
+- [x] **T3 Scaffold server-app and move server code.**
   - Files: `server-app/{package.json (name server-app, exports {"./shared":"./src/shared/index.ts"}, scripts dev `next dev -p 3001`, start, build, lint, typecheck, test, db:*), next.config.ts, tsconfig.json, eslint.config.mjs, vitest.config.mts, vercel.json, drizzle.config.ts, .env.example}`; `git mv` into `server-app/`: `server-admin/src/{db,data,lib/auth.ts,lib/storage.ts,lib/user-service.ts,lib/validators.ts,lib/*.test.ts except format}`, `server-admin/scripts`, `drizzle/ → server-app/drizzle/`; new `server-app/src/shared/{index.ts,types.ts}` (re-exports validators; `FeedSort`, `FeedTrip`, `OrganizerTrip` with JSON dates, `OrganizerStats`, `AdminUserRow`, `SessionUser`, `ApiResult`); `server-app/src/app/route.ts` (GET / returns `{name:"server-app",status:"ok"}`); `server-app/src/app/api/health/route.ts`; `server-app/src/app/api/auth/[...all]/route.ts`.
   - Change: `data/*.ts` import the types from `@/shared/types`, and `getOrganizerTrips` maps `createdAt` to an ISO string. Update `pnpm-workspace.yaml` and the root `vitest` projects; root `db:*` → `--filter server-app`.
   - Tests: moved `validators`/`user-service` tests plus a new `server-app/src/test/health.test.ts`. `pnpm test:file server-app/src`.
   - Done when: `pnpm --filter server-app build` passes with dummy env and `pnpm db:check` passes.
-- [ ] **T4 REST handlers and authorization.**
+- [x] **T4 REST handlers and authorization.**
   - Files: `server-app/src/lib/api-auth.ts` (`getApiSession(req)`, `requireApiUser` → 401 Response, `requireApiAdmin` → 401/403); route handlers `api/session` GET; `api/signup` POST multipart (logic from `signUpAction`); `api/trips` POST (organizerId taken from the session); `api/organizer/trips` GET `?limit`; `api/organizer/stats` GET; `api/feed` GET `?city&sort&cursor`; `api/feed/since` GET `?since&city`; `api/feed/cities` GET; `api/admin/users` GET `?q&page` and POST; `api/admin/users/[id]` PATCH and DELETE (`RouteContext`); `api/admin/users/[id]/ban` POST. Error body `{ok:false,error}` with status 400/401/403/409. Same messages and self-protection rules as today's actions.
   - Tests in `server-app/src/test/api/*.test.ts`, mocking `@/db/client`, `@/lib/auth`, `server-only`:
     - Each protected endpoint returns 401 without a session.
@@ -72,14 +72,14 @@ The work ships as two PRs. **PR 1** (current branch `refactor/server-app-server-
     - `/api/session` without a cookie returns `{user:null}`.
     - Command: `pnpm test:file server-app/src/test/api`.
   - Done when: all of these pass and `pnpm check` passes.
-- [ ] **T5 server-admin talks to server-app only.**
+- [x] **T5 server-admin talks to server-app only.**
   - Files: `server-admin/src/lib/{api.ts (server-only `apiFetch`: `cookies()` → cookie header, `cache:"no-store"`), session.ts (`getSession`: no Better Auth session cookie → null without fetching, else `/api/session`; `requireUser`/`requireAdmin` redirects unchanged; `assertAdmin` removed), client-api.ts (`fetch` JSON/FormData → `{ok,error}`)}`; `next.config.ts` (rewrite `/api/:path*` → `${SERVER_APP_URL}/api/:path*`, drop `serverActions`); the pages `feed`, `admin`, `organizer/{page,trips}` and the components `signup-form`, `create-trip-dialog`, `feed-client`, `users-table`, `user-form-dialog` (fetch plus `router.refresh()`), and the type imports in `feed-trip-card`/`organizer-trip-card` → `server-app/shared`; delete `app/actions`, `app/api`; drop DB/Supabase/Drizzle deps; add `"server-app":"workspace:*"`; ESLint `no-restricted-imports`; `server-admin/.env.example` (`SERVER_APP_URL` only).
   - Tests: `server-admin/src/lib/format.test.ts` still passes. `pnpm test:file server-admin/src`.
   - Done when: `grep -rE "db/client|drizzle|postgres|supabase|better-auth/(next-js|api)|\"use server\"" server-admin/src` is empty and `pnpm --filter server-admin build` passes.
-- [ ] **T6 e2e with both apps.**
+- [x] **T6 e2e with both apps.**
   - Files: `playwright.config.ts` (webServer array: server-app on 3001 with dummy env and `BETTER_AUTH_URL=http://localhost:3100`; server-admin on 3100 with `SERVER_APP_URL=http://localhost:3001`), `e2e/smoke.spec.ts` (+ test: `request.get("/api/health")` returns 200 JSON `status:"ok"`).
   - Done when: `pnpm build && pnpm e2e` gives 8×2 passing.
-- [ ] **T7 PR 2 guardrail patches**, in `specs/server-app-server-admin/guardrail-patches/`:
+- [x] **T7 PR 2 guardrail patches**, in `specs/server-app-server-admin/guardrail-patches/`:
   - `pr2-migrate.patch`: `paths: ["server-app/drizzle/**"]`.
   - `pr2-stop-check.patch`: add `server-app`, drop `drizzle`.
   - `pr2-deploy-smoke.patch`: if `$URL/` returns JSON with `"server-app"`, check `/` 200, `/api/session` 200 and `/api/admin/users` 401; otherwise run today's checks.
@@ -87,9 +87,35 @@ The work ships as two PRs. **PR 1** (current branch `refactor/server-app-server-
   - `pr2-security-reviewer.patch`: paths `server-app/src/{app/api,lib,data}` and `server-admin/src/lib/api.ts`; invariant 1 becomes "handlers call `requireApiUser`/`requireApiAdmin`".
   - `ci.yml`: no patch expected (root scripts and the job-level dummy env cover both builds); add one only if T6 fails in CI.
   - Done when: `git apply --check` passes for each patch.
-- [ ] **T8 Docs.**
+- [x] **T8 Docs.**
   - Files: `server-app/README.md` (endpoint table: method, path, auth, body, response), `README.md` (two modules, two `.env.local` files, ports 3000/3001, zones tree), `CLAUDE.md` (Architecture/Commands for the two modules, invariants now under `server-app/`, under 200 lines), `docs/adr/0005-two-modules-server-app-server-admin.md` plus the 0001 status line, `docs/ghid-colega.md` (Joiner UI in `server-admin/src/app/(joiner)/`; endpoints and tables in `server-app/`), `.github/copilot-instructions.md`, `AGENTS.md` (docs path per package).
   - Done when: `wc -l CLAUDE.md` is under 200 and every route in `server-app/src/app/api` appears in the table.
+
+### PR 2 adjustments (2026-11-17, from PR 1 evidence; approach unchanged)
+- Branch `refactor/server-app-rest` from `main` at 76bce54, issue #13. PR 1 was #9; the security fix (#11/#12) moved `shadcn` to devDependencies.
+- Root `dev` runs both apps (`pnpm -r --parallel dev`: server-admin on 3000, server-app on 3001).
+- T7 `pr2-deploy-smoke.patch` also fixes the trigger: `deployment_status` never fires because the Vercel integration posts commit statuses, not GitHub Deployments (the workflow has never run). Trigger on `status` events where `context == "Vercel"`, `state == "success"` and the commit is on `main`.
+- Before VERIFY, the human copies the secrets file: `cp server-admin/.env.local server-app/.env.local` (agents may not touch `.env*`). `server-admin` needs only `SERVER_APP_URL`, which defaults to `http://localhost:3001` in dev.
+- The local app uses the production database. In the running app, the verifier does only reversible flows: login and logout, read the feed and organizer pages, and admin create, edit, ban, unban and delete of a user named `verifier-test-<timestamp>`. It does not create trips or sign up from the UI; the handler unit tests (T4) cover those.
+- REVIEW also runs `security-reviewer` on the diff, since every authorization check moves into the REST handlers.
+- Deviations from T7/T8, accepted by the orchestrator under the human's delegation:
+  - No `pr2-codeowners.patch`, because CODEOWNERS `*` already covers every path.
+  - Root `AGENTS.md` stays the `next dev` generated block, whose text already covers monorepos. CLAUDE.md names `<package>/node_modules/next/dist/docs/`.
+  - deploy-smoke checks the frontend URL only: `/api/health` and `/api/admin/users` 401 through the rewrite. That proves server-app is reachable without needing its URL.
+- REVIEW fix round 1 (both reviewers APPROVE with warnings). Fixed:
+  - same-origin check on every mutating custom handler, signup included (login-CSRF);
+  - 415 for non-JSON bodies;
+  - signup validates the fields before uploading;
+  - an admin password reset revokes the user's sessions;
+  - `Cache-Control: private, no-store` on `/api/session`;
+  - admin `page` clamped and ILIKE wildcards escaped;
+  - photo hook URL limited to the bucket's public prefix;
+  - `apiFetch` only accepts `/api/` paths and needs https on Vercel;
+  - `getSession` throws on 5xx;
+  - deploy-smoke context matched exactly, plus a 401 check;
+  - e2e gives server-admin only `SERVER_APP_URL`;
+  - `.env.example` wording.
+- Deferred to a follow-up issue, because both need a deployed test: signup rate limiting, and the client IP Better Auth sees behind the Vercel rewrite. Signup had no rate limit with the old Server Action either.
 
 ## Verification
 - **Each PR:** `pnpm install --frozen-lockfile && pnpm check && pnpm db:check && pnpm build && pnpm e2e`; `git apply --check specs/server-app-server-admin/guardrail-patches/<pr>-*.patch`.
@@ -117,3 +143,8 @@ The work ships as two PRs. **PR 1** (current branch `refactor/server-app-server-
 ## Run notes
 - PLAN: planner hit its 40-turn limit while reading Next/Better Auth internals and returned no report → resumed with "write the plan now, at most 3 more tool calls".
 - REVIEW T1: root `lint` became `pnpm -r lint`, which skips the workspace root, so `e2e/` and root configs silently lost lint coverage (APPROVE with warning) → fix round 1 added a root `eslint.config.mjs` and `eslint e2e playwright.config.ts vitest.config.mts` to root `lint`, proven with a deliberate lint error.
+- RELEASE PR 1: Vercel Root Directory change was not saved on the first try, and empty commits were then "Canceled" by Vercel's skip-unchanged-root rule while GitHub showed `Vercel: pass` → the human re-saved the setting and used Redeploy. Preview login always shows "Wrong username/email or password", because the origin check rejects preview origins and the form shows one generic message.
+- RELEASE PR 1: a coder moved `.env.local` into `server-admin/` despite being told not to touch it (it was never read or committed) → noted for LEARN as a permissions gap.
+- VERIFY PR 1: the plan named e2e checks, but the orchestrator ran them itself instead of spawning harness-verifier → PR 2 uses the verifier.
+- VERIFY PR 2: the plan had the verifier run admin UI flows, but the admin password exists only in `.env.local`, which agents may not read → verifier runs only as the public demo user `alex`; the human checks the admin flows by hand at gate 2. Unit tests in `server-app/src/test/api/authz.test.ts` cover admin authorization.
+- VERIFY PR 2: harness-verifier hit its 30-turn limit with no report → resumed with "at most 10 more calls, then report". It skipped the login form submit because its browser already had a session, so the orchestrator checked login, session, SSR and logout through the :3000 rewrite with curl as `alex` (all 200).

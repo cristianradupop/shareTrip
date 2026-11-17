@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { createTripAction } from "@/app/actions/trips";
 import { FormField } from "@/components/form-field";
 import {
   AlertDialog,
@@ -30,7 +29,8 @@ import {
   tripSchema,
   type TripFormInput,
   type TripInput,
-} from "@/lib/validators";
+} from "server-app/shared";
+import { clientFetch } from "@/lib/client-api";
 
 const EMPTY = {
   destinationCity: "",
@@ -94,7 +94,7 @@ export function CreateTripButton({
 
   async function onSubmit(values: TripInput) {
     setServerError(null);
-    const result = await createTripAction(values);
+    const result = await clientFetch<{ id: string }>("/api/trips", { json: values });
     if (!result.ok) {
       setServerError(result.error);
       return;

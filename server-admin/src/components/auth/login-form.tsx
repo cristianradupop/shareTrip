@@ -9,7 +9,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
-import { loginSchema, type LoginInput } from "@/lib/validators";
+import { loginSchema, type LoginInput } from "server-app/shared";
 
 // Only allow redirects to paths inside this site.
 const safeNext = (next?: string) => (next && next.startsWith("/") && !next.startsWith("//") ? next : null);

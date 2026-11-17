@@ -4,7 +4,6 @@ import { Ban, ChevronLeft, ChevronRight, Pencil, Plus, Search, ShieldCheck, Tras
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { deleteUserAction, setBanAction } from "@/app/actions/admin";
 import { UserFormDialog } from "@/components/admin/user-form-dialog";
 import {
   AlertDialog,
@@ -21,7 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserAvatar } from "@/components/user-menu";
-import type { AdminUserRow } from "@/data/users";
+import type { AdminUserRow } from "server-app/shared";
+import { clientFetch } from "@/lib/client-api";
 
 export function UsersTable({
   users,
@@ -56,11 +56,14 @@ export function UsersTable({
     router.replace(`${pathname}?${sp.toString()}`);
   }
 
-  function run(action: () => Promise<{ ok: boolean; error?: string }>, success: string) {
+  function run(action: () => Promise<{ ok: true } | { ok: false; error: string }>, success: string) {
     startTransition(async () => {
       const r = await action();
-      if (r.ok) toast.success(success);
-      else toast.error(r.error ?? "Something went wrong");
+      if (r.ok) {
+        toast.success(success);
+        router.refresh();
+      }
+      else toast.error(r.error);
     });
   }
 
@@ -157,7 +160,7 @@ export function UsersTable({
                         disabled={self}
                         aria-label={u.banned ? `Unban ${u.username}` : `Ban ${u.username}`}
                         title={u.banned ? "Unban" : "Ban"}
-                        onClick={() => run(() => setBanAction(u.id, !u.banned), u.banned ? "User unbanned" : "User banned")}
+                        onClick={() => run(() => clientFetch(`/api/admin/users/${u.id}/ban`, { json: { banned: !u.banned } }), u.banned ? "User unbanned" : "User banned")}
                       >
                         {u.banned ? <Undo2 /> : <Ban />}
                       </Button>
@@ -213,7 +216,7 @@ export function UsersTable({
               onClick={() => {
                 const id = toDelete?.id;
                 setToDelete(null);
-                if (id) run(() => deleteUserAction(id), "User deleted");
+                if (id) run(() => clientFetch(`/api/admin/users/${id}`, { method: "DELETE" }), "User deleted");
               }}
             >
               Delete

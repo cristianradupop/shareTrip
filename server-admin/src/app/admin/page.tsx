@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { UsersTable } from "@/components/admin/users-table";
-import { listUsers } from "@/data/users";
+import type { AdminUserRow } from "server-app/shared";
+import { apiGet } from "@/lib/api";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Manage users" };
@@ -11,7 +12,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
   const q = typeof sp.q === "string" ? sp.q : "";
   const page = Math.max(1, Number.parseInt(typeof sp.page === "string" ? sp.page : "1", 10) || 1);
 
-  const { users, total, pages } = await listUsers({ q, page });
+  const query = new URLSearchParams({ page: String(page) });
+  if (q) query.set("q", q);
+  const { users, total, pages } = await apiGet<{ users: AdminUserRow[]; total: number; pages: number }>(
+    `/api/admin/users?${query}`,
+  );
 
   return (
     <div className="space-y-6">

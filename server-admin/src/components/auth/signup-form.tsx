@@ -6,11 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { signUpAction } from "@/app/actions/auth";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PHOTO_MAX_BYTES, signUpSchema, type SignUpInput } from "@/lib/validators";
+import { PHOTO_MAX_BYTES, signUpSchema, type SignUpInput } from "server-app/shared";
+import { clientFetch } from "@/lib/client-api";
 
 const FIELDS: { name: keyof SignUpInput; label: string; type?: string; autoComplete?: string }[] = [
   { name: "username", label: "Username", autoComplete: "username" },
@@ -69,7 +69,7 @@ export function SignUpForm() {
     const data = new FormData();
     Object.entries(values).forEach(([k, v]) => data.append(k, v));
     data.append("photo", photo);
-    const result = await signUpAction(data);
+    const result = await clientFetch("/api/signup", { form: data });
     if (!result.ok) {
       setServerError(result.error);
       return;

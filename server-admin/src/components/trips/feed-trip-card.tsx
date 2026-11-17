@@ -1,7 +1,7 @@
 import { CalendarDays, ChevronDown, MapPin, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 import { UserAvatar } from "@/components/user-menu";
-import type { FeedTrip } from "@/data/trips";
+import type { FeedTrip } from "server-app/shared";
 import { formatDateRange, formatMoney, GENDER_LABEL, TRANSPORT_LABEL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
