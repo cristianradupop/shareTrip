@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarPlus, Compass, Mail, Users } from "lucide-react";
+import { ArrowRight, CalendarPlus, Compass, Mail, Map, Users } from "lucide-react";
 import Link from "next/link";
 import { HeroBackdrop } from "@/components/hero-backdrop";
 import { MainNav } from "@/components/main-nav";
@@ -38,6 +38,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
             <RoleCard
               href="/joiner"
               title="Joiner"
+              titleIcon={<Map className="size-6" aria-hidden="true" />}
               description="Discover upcoming trips, and join the adventure!"
               cta="Continue as Joiner"
               icon={<Users className="size-10" />}
@@ -90,6 +91,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
 function RoleCard(props: {
   href: string;
   title: string;
+  titleIcon?: React.ReactNode;
   description: string;
   cta: string;
   icon: React.ReactNode;
@@ -104,7 +106,10 @@ function RoleCard(props: {
       )}
     >
       <div className={orange ? "text-orange-300" : "text-teal-200"}>{props.icon}</div>
-      <h2 className="mt-4 text-3xl font-semibold">{props.title}</h2>
+      <h2 className="mt-4 flex items-center gap-2 text-3xl font-semibold">
+        {props.titleIcon}
+        {props.title}
+      </h2>
       <p className="mt-2 text-base text-white/85">{props.description}</p>
       <Link
         href={props.href}
