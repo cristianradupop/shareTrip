@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // Smoke tests: no database, no real secrets. They prove the production build boots and the public
-// surface and the auth redirects (src/proxy.ts) behave. Deeper flows need a test database (see docs/adr).
+// surface and the auth redirects (server-admin/src/proxy.ts) behave. Deeper flows need a test database (see docs/adr).
 
 test("landing page renders", async ({ page }) => {
   const res = await page.goto("/");

@@ -7,19 +7,21 @@ Stack: Next.js 16 · React 19 · TypeScript · Tailwind 4 · shadcn/ui (Base UI)
 
 ```bash
 pnpm install
-cp .env.example .env.local        # then fill it in (see comments inside; never commit it)
+cp server-admin/.env.example server-admin/.env.local   # then fill it in (see comments inside; never commit it)
 pnpm db:migrate                   # create tables in Supabase
 pnpm db:setup-storage             # public bucket for profile photos
-pnpm db:seed-admin                # first administrator (ADMIN_* in .env.local, password >= 10 chars)
+pnpm db:seed-admin                # first administrator (ADMIN_* in server-admin/.env.local, password >= 10 chars)
 pnpm db:seed-demo                 # fictional users + trips for the demo
 pnpm dev                          # http://localhost:3000
 ```
+
+The repo is a pnpm workspace: the Next app is in `server-admin/` (a backend-only `server-app/` comes in a later PR). Run all commands from the repo root.
 
 Demo login: `alex.popescu@demo.test` (or username `alex`) / `Demo-Pass-123!`. Admin: the `ADMIN_*` values, then open `/admin`.
 
 | Script | What it does |
 |---|---|
-| `pnpm db:generate` | create a SQL migration after changing `src/db/schema` (commit the file in `drizzle/`) |
+| `pnpm db:generate` | create a SQL migration after changing `server-admin/src/db/schema` (commit the file in `drizzle/`) |
 | `pnpm db:migrate` | apply migrations (uses `DIRECT_URL`, session pooler :5432) |
 | `pnpm db:studio` | visual database browser (Drizzle Studio) |
 | `pnpm check` | lint + typecheck + unit tests (Vitest); the gate used by the pre-commit hook and CI |
@@ -29,7 +31,7 @@ Demo login: `alex.popescu@demo.test` (or username `alex`) / `Demo-Pass-123!`. Ad
 ## Zones and owners
 
 ```
-src/app/
+server-admin/src/app/
   (main)/        landing page                     <- Organizer dev
   (auth)/        login, signup                    <- Organizer dev
   (organizer)/   dashboard, trips, profile        <- Organizer dev
@@ -37,25 +39,25 @@ src/app/
   (joiner)/      Joiner area (placeholder)        <- Joiner dev
   admin/         user management (admins only)    <- Organizer dev
   api/auth/      Better Auth handler              <- shared
-src/db/schema/   auth.ts (generated), trips.ts, trip-members.ts  <- Joiner dev adds chats/messages
+server-admin/src/db/schema/   auth.ts (generated), trips.ts, trip-members.ts  <- Joiner dev adds chats/messages
 ```
 
-Rules: edit your own zone; changes to shared files (schema, `src/lib/auth.ts`, `src/components/ui`, root layout) go in small PRs.
+Rules: edit your own zone; changes to shared files (schema, `server-admin/src/lib/auth.ts`, `server-admin/src/components/ui`, root layout) go in small PRs.
 
 ## For the Joiner developer
 
 - `trip_members` already exists (`tripId`, `userId`, `joinedAt`). The organizer is `trips.organizerId`, not a row in `trip_members`.
 - `FeedTripCard` has an `action` slot: pass your "Join" button there. Spots left = `maxTravelers - joined`.
 - Add `chats` / `messages` tables in new schema files, then `pnpm db:generate`.
-- Server code must call `requireUser()` from `src/lib/session.ts` and check ownership itself: the database connection bypasses RLS.
+- Server code must call `requireUser()` from `server-admin/src/lib/session.ts` and check ownership itself: the database connection bypasses RLS.
 
 ## Things worth knowing
 
 - **Roles:** one global role per account (`user` or `admin`). "Organizer" / "Joiner" are per-trip relationships, not roles.
-- **Database access:** server code only. The app connects with the Supabase *transaction pooler* (`DATABASE_URL`, port 6543). `postgres.js` must run with `prepare: false` and `max_pipeline: 1` (see `src/db/client.ts`), otherwise concurrent queries hang.
-- **Security:** `src/proxy.ts` is only a redirect. Every admin page and action calls `requireAdmin()` / `assertAdmin()`.
+- **Database access:** server code only. The app connects with the Supabase *transaction pooler* (`DATABASE_URL`, port 6543). `postgres.js` must run with `prepare: false` and `max_pipeline: 1` (see `server-admin/src/db/client.ts`), otherwise concurrent queries hang.
+- **Security:** `server-admin/src/proxy.ts` is only a redirect. Every admin page and action calls `requireAdmin()` / `assertAdmin()`.
 - **Photos:** JPG/PNG, max 2 MB, checked in the browser and again on the server (file signature).
-- **Deploy:** live at https://share-trip-inky.vercel.app (Vercel Hobby, project `share-trip`, auto-deploys on push to `main`; `vercel.json` pins `fra1`). Set the same variables as `.env.example` (`BETTER_AUTH_URL` = production URL) and pick the Frankfurt function region (`fra1`) to be near Supabase.
+- **Deploy:** live at https://share-trip-inky.vercel.app (Vercel Hobby, project `share-trip`, auto-deploys on push to `main`; `server-admin/vercel.json` pins `fra1`; the Vercel project's Root Directory must be `server-admin`). Set the same variables as `server-admin/.env.example` (`BETTER_AUTH_URL` = production URL) and pick the Frankfurt function region (`fra1`) to be near Supabase.
 
 ## Workflow and CI/CD
 

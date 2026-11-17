@@ -1,3 +1,5 @@
+packages:
+  - server-admin
 allowBuilds:
   esbuild: true
   sharp: false

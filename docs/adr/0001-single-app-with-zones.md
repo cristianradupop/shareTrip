@@ -1,6 +1,6 @@
 # 0001 One Next.js app with zones
 
-Status: accepted 2026-11-13 · Source: project kickoff
+Status: superseded by 0005 2026-11-17 · Source: project kickoff
 
 ## Context
 Two developers build TripTogether for a course. Landing, organizer, admin and (later) joiner areas share auth, schema and UI.
