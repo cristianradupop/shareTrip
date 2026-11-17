@@ -2,7 +2,7 @@
 
 Ghid pentru cineva care nu a lucrat încă cu proiectul. Urmează pașii în ordine. Dacă te blochezi, trimite-i lui Cristian mesajul exact de eroare.
 
-Tu lucrezi la zona **Joiner** (vezi `README.md`). Tot ce ține de zona ta se află în `server-admin/src/app/(joiner)/`. Aplicația Next.js stă acum în `server-admin/`; un PR viitor mută codul de backend în `server-app/`.
+Tu lucrezi la zona **Joiner** (vezi `README.md`). Tot ce ține de zona ta se află în `server-admin/src/app/(joiner)/`. Proiectul are două module: `server-admin/` (interfața web, inclusiv zona ta) și `server-app/` (backend: baza de date, autentificare, API REST). Interfața nu atinge baza de date, ci cheamă API-ul din `server-app`.
 
 ## 0. Ce îți trebuie înainte
 
@@ -11,7 +11,7 @@ Tu lucrezi la zona **Joiner** (vezi `README.md`). Tot ce ține de zona ta se afl
 3. **Node 24**: verifică cu `node --version` (trebuie să înceapă cu `v24`). Instalare recomandată prin nvm: https://github.com/nvm-sh/nvm (pe Windows: nvm-windows).
 4. **pnpm**: după ce ai Node, rulează `corepack enable`. Verifică cu `pnpm --version`.
 5. **Un editor**: VS Code (https://code.visualstudio.com).
-6. **Valorile secrete** (`server-admin/.env.local`): le primești de la Cristian pe un canal privat (mesaj direct). **Nu** le pui niciodată pe GitHub, în commit-uri sau în chat-uri de grup.
+6. **Valorile secrete** (fișierul `.env.local` pentru `server-app`): le primești de la Cristian pe un canal privat (mesaj direct). **Nu** le pui niciodată pe GitHub, în commit-uri sau în chat-uri de grup.
 
 Configurează o singură dată numele și emailul pentru git (același email ca la contul GitHub):
 
@@ -36,15 +36,19 @@ pnpm install
 
 Durează câteva minute. Tot acum se activează automat verificările de calitate (git hooks).
 
-## 3. Configurează `server-admin/.env.local`
+## 3. Configurează fișierele `.env.local` (două module)
 
 ```bash
+cp server-app/.env.example server-app/.env.local
 cp server-admin/.env.example server-admin/.env.local
 ```
 
-Deschide `server-admin/.env.local` și completează valorile primite de la Cristian (baza de date, chei Supabase, secretul de autentificare). Folosiți **aceeași bază de date**, deci **nu** rula `db:migrate` sau `db:seed-*`: sunt deja făcute.
+- `server-app/.env.local`: aici sunt toate secretele (baza de date, chei Supabase, secretul de autentificare). Completează valorile primite de la Cristian. Folosiți **aceeași bază de date**, deci **nu** rula `db:migrate` sau `db:seed-*`: sunt deja făcute. Verifică că `BETTER_AUTH_URL=http://localhost:3000`.
+- `server-admin/.env.local`: conține doar `SERVER_APP_URL=http://localhost:3001` (valoarea implicită din `.env.example`, nu e secret).
 
-`server-admin/.env.local` este ignorat de git, deci nu poate ajunge din greșeală pe GitHub. Verifică totuși că `BETTER_AUTH_URL=http://localhost:3000`.
+Ambele fișiere sunt ignorate de git, deci nu pot ajunge din greșeală pe GitHub.
+
+**După ce faci `git pull` pe `main`** (la prima actualizare după mutarea în două module): dacă ai încă vechiul `server-admin/.env.local` cu toate secretele, copiază-l în `server-app/.env.local` (`cp server-admin/.env.local server-app/.env.local`), apoi lasă în `server-admin/.env.local` doar `SERVER_APP_URL=http://localhost:3001`.
 
 ## 4. Pornește aplicația
 
@@ -52,7 +56,7 @@ Deschide `server-admin/.env.local` și completează valorile primite de la Crist
 pnpm dev
 ```
 
-Deschide http://localhost:3000. Te poți loga cu contul demo:
+Pornește ambele module: interfața pe http://localhost:3000 și `server-app` pe http://localhost:3001. Deschide http://localhost:3000. Te poți loga cu contul demo:
 - email: `alex.popescu@demo.test` (sau username `alex`)
 - parola: `Demo-Pass-123!`
 
@@ -130,10 +134,12 @@ git branch -d feat/butonul-join
 
 ## 6. Reguli importante
 
-- Editezi doar **zona ta** (`server-admin/src/app/(joiner)/`, plus tabelele tale noi). Fișierele comune (`server-admin/src/db/schema`, `server-admin/src/lib/auth.ts`, `server-admin/src/components/ui`, layout-ul principal) se schimbă doar în PR-uri mici, separate, anunțate lui Cristian.
+- Editezi doar **zona ta** (`server-admin/src/app/(joiner)/`, plus tabelele și endpoint-urile tale noi). Fișierele comune (`server-app/src/db/schema`, `server-app/src/lib/auth.ts`, `server-app/src/shared`, `server-admin/src/components/ui`, layout-ul principal) se schimbă doar în PR-uri mici, separate, anunțate lui Cristian.
 - Nu face niciodată `git push --force` și nu face commit direct pe `main`.
 - Secretele (`.env.local`) nu se pun nicăieri în repo.
-- Dacă modifici schema bazei de date (`server-admin/src/db/schema/*`), rulează `pnpm db:generate` și include fișierul SQL nou din `drizzle/` în același PR. Spune-i lui Cristian înainte, deoarece baza de date e comună.
+- Tabelele noi (`chats`, `messages`) merg în fișiere noi în `server-app/src/db/schema/`. Apoi rulează `pnpm db:generate` și include fișierul SQL nou din `server-app/drizzle/` în același PR. Spune-i lui Cristian înainte, deoarece baza de date e comună.
+- Endpoint-uri noi: `server-app/src/app/api/.../route.ts`. Fiecare începe cu `requireApiUser(req)` (din `server-app/src/lib/api-auth.ts`) și verifică singur ce îi aparține utilizatorului (de exemplu „e călătoria mea?”), pentru că baza de date nu are protecție RLS pe conexiunea noastră. Fiecare endpoint nou are un test în `server-app/src/test/api/` (vezi cele existente; baza de date și `@/lib/auth` sunt mock-uite).
+- Interfața cheamă endpoint-urile așa: într-un Server Component folosești `apiGet` / `apiFetch` din `server-admin/src/lib/api.ts`; într-o componentă client folosești `clientFetch` din `server-admin/src/lib/client-api.ts`, apoi `router.refresh()` după o modificare. Tipurile comune se importă din `server-app/shared`.
 - Pentru funcționalități noi se folosește fluxul `/harness` din Claude Code (vezi `CLAUDE.md`). Pentru corecturi mici, lucrezi direct.
 
 ## 7. Comenzi utile
@@ -153,7 +159,7 @@ git branch -d feat/butonul-join
 
 - **`pnpm: command not found`**: rulează `corepack enable`, apoi deschide un terminal nou.
 - **Versiune Node greșită**: `nvm install 24 && nvm use 24`.
-- **Eroare `DATABASE_URL` la pornire**: lipsește sau e greșit `.env.local`. Verifică că fișierul e în `server-admin/`, nu în rădăcina proiectului. Comenzile `pnpm` se rulează tot din rădăcină.
+- **Eroare `DATABASE_URL` la pornire**: lipsește sau e greșit `.env.local`. Verifică că fișierul e `server-app/.env.local` (nu în rădăcina proiectului și nu în `server-admin/`). Comenzile `pnpm` se rulează tot din rădăcină.
 - **`git pull --ff-only` dă eroare**: ai modificări locale necomise sau ești pe alt branch. Fă commit sau întreabă înainte să ștergi ceva.
 - **Ai făcut din greșeală commit pe `main`**: nu da push. Scrie-i lui Cristian, se rezolvă simplu dacă nu ai împins nimic.
 - **Orice altceva**: copiază mesajul complet de eroare și trimite-l.

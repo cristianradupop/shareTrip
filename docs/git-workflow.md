@@ -21,15 +21,15 @@ issue  ->  branch from main  ->  commits  ->  push branch  ->  PR  ->  CI on the
 5. **Open the pull request** (GitHub prints the link after the push) into `main`. Fill the template, write `Closes #12` so the issue closes on merge. CI starts automatically on the PR.
 6. **CI runs on the server** (`.github/workflows/ci.yml`): `check` (lint, types, unit tests), `migrations` (Drizzle history), `e2e` (build + Playwright smoke), plus `security` and `dependency-review`. Required: `check`, `migrations`, `e2e`. Red: fix on the same branch and push again; the PR re-runs by itself.
 7. **Merge on GitHub**, not locally: button **Squash and merge** (one commit per issue on `main`). The branch is deleted automatically.
-8. **After the merge**: Vercel deploys `main`; `deploy-smoke.yml` checks the live site; if `drizzle/**` changed, `migrate.yml` applies the migration to Supabase (it must be backward compatible).
+8. **After the merge**: Vercel deploys `main`; `deploy-smoke.yml` checks the live site; if `server-app/drizzle/**` changed, `migrate.yml` applies the migration to Supabase (it must be backward compatible).
 9. **Sync locally**: `git switch main && git pull --ff-only`, delete the local branch (`git branch -d feat/12-join-trip`).
 
 ## Rules
 
 - Never commit to `main`, never force-push a shared branch, never merge your own PR with red checks.
 - Keep PRs small (about a day of work). A schema change ships with its generated migration (`pnpm db:generate`) in the same PR.
-- Shared files (`server-admin/src/db/schema`, `server-admin/src/lib/auth.ts`, `server-admin/src/components/ui`, root layout, `.github/`, `.claude/`) go in their own small PRs.
-- Secrets never go in a commit; they live in `server-admin/.env.local`, Vercel and GitHub Environments.
+- Shared files (`server-app/src/db/schema`, `server-app/src/lib/auth.ts`, `server-app/src/shared`, `server-admin/src/components/ui`, root layout, `.github/`, `.claude/`) go in their own small PRs.
+- Secrets never go in a commit; they live in `server-app/.env.local`, Vercel and GitHub Environments.
 
 ## One-time GitHub settings (repository owner)
 

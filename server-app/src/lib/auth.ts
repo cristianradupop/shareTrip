@@ -29,7 +29,7 @@ export const auth = betterAuth({
       create: {
         // The public sign-up endpoint can be called directly, so enforce the "photo required" rule here too.
         before: async (newUser) => {
-          const prefix = `${process.env.SUPABASE_URL}/storage/`;
+          const prefix = `${process.env.SUPABASE_URL}/storage/v1/object/public/${process.env.SUPABASE_PHOTOS_BUCKET || "profile-photos"}/`;
           if (!newUser.image || !newUser.image.startsWith(prefix)) {
             throw new APIError("BAD_REQUEST", { message: "A profile photo is required" });
           }

@@ -2,32 +2,22 @@ import "server-only";
 import { asc, count, desc, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { user } from "@/db/schema";
+import type { AdminUserRow } from "@/shared/types";
 
 export const USERS_PAGE_SIZE = 10;
 
-export type AdminUserRow = {
-  id: string;
-  username: string | null;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  address: string;
-  birthDate: string;
-  role: "user" | "admin";
-  banned: boolean;
-  image: string | null;
-  createdAt: string;
-};
+// Postgres LIKE treats % and _ as wildcards and backslash as the escape character.
+const escapeLike = (s: string) => s.replace(/[\\%_]/g, "\\$&");
 
 export async function listUsers(opts: { q?: string; page: number; sort?: "newest" | "name" }) {
   const q = opts.q?.trim();
+  const pattern = `%${escapeLike(q ?? "")}%`;
   const where = q
     ? or(
-        ilike(user.email, `%${q}%`),
-        ilike(user.username, `%${q}%`),
-        ilike(user.firstName, `%${q}%`),
-        ilike(user.lastName, `%${q}%`),
+        ilike(user.email, pattern),
+        ilike(user.username, pattern),
+        ilike(user.firstName, pattern),
+        ilike(user.lastName, pattern),
       )
     : undefined;
 

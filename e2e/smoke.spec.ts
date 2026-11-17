@@ -29,6 +29,13 @@ for (const path of ["/admin", "/organizer", "/feed"]) {
   });
 }
 
+test("/api/health is proxied to server-app and returns ok JSON", async ({ request }) => {
+  const res = await request.get("/api/health");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("application/json");
+  expect(await res.json()).toMatchObject({ status: "ok" });
+});
+
 test("unknown route returns 404", async ({ page }) => {
   const res = await page.goto("/this-page-does-not-exist");
   expect(res?.status()).toBe(404);

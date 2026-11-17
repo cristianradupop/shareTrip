@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { CreateTripButton } from "@/components/trips/create-trip-dialog";
 import { OrganizerTripCard } from "@/components/trips/organizer-trip-card";
-import { getOrganizerTrips } from "@/data/trips";
+import type { OrganizerTrip } from "server-app/shared";
+import { apiGet } from "@/lib/api";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "My Trips" };
 
 export default async function MyTripsPage() {
-  const user = await requireUser();
-  const trips = await getOrganizerTrips(user.id);
+  await requireUser();
+  const { trips } = await apiGet<{ trips: OrganizerTrip[] }>("/api/organizer/trips");
 
   return (
     <div className="space-y-6 pt-2">

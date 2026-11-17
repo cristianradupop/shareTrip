@@ -1,0 +1,18 @@
+diff --git a/.github/workflows/migrate.yml b/.github/workflows/migrate.yml
+--- a/.github/workflows/migrate.yml
++++ b/.github/workflows/migrate.yml
+@@ -1,4 +1,4 @@
+-# Applies Drizzle migrations to the production Supabase database after a merge that changes drizzle/**.
++# Applies Drizzle migrations to the production Supabase database after a merge that changes server-app/drizzle/**.
+ # Vercel deploys the same commit at the same time, so every migration must be backward compatible
+ # with the previous release (add first, remove in a later release). See docs/adr/0003-ci-gates-deploy.md.
+ name: Migrate database
+@@ -6,7 +6,7 @@ name: Migrate database
+ on:
+   push:
+     branches: [main]
+-    paths: ["drizzle/**"]
++    paths: ["server-app/drizzle/**"]
+   workflow_dispatch:
+ 
+ concurrency:

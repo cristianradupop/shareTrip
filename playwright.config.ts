@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
+const APP_PORT = 3001;
 
 // Smoke tests only: they must pass with no database and no real secrets, so CI stays free and safe.
 // The dummy values below let the app boot; no test touches the database.
@@ -24,12 +25,22 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    // Build once (CI does it in its own step), then serve the production build.
-    command: `pnpm --filter server-admin exec next start -p ${PORT}`,
-    url: `http://localhost:${PORT}`,
-    env: dummyEnv,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  // Build once (CI does it in its own step), then serve both production builds.
+  // server-admin proxies /api/* to server-app, so both must be up.
+  webServer: [
+    {
+      command: `pnpm --filter server-app exec next start -p ${APP_PORT}`,
+      url: `http://localhost:${APP_PORT}/api/health`,
+      env: dummyEnv,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      command: `pnpm --filter server-admin exec next start -p ${PORT}`,
+      url: `http://localhost:${PORT}`,
+      env: { SERVER_APP_URL: `http://localhost:${APP_PORT}`, NEXT_TELEMETRY_DISABLED: "1" },
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

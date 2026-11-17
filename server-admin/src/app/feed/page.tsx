@@ -4,7 +4,8 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FeedClient } from "@/components/trips/feed-client";
 import { UserAvatar } from "@/components/user-menu";
-import { getActiveCities, getFeed, type FeedSort } from "@/data/trips";
+import type { FeedSort, FeedTrip } from "server-app/shared";
+import { apiGet } from "@/lib/api";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Community feed" };
@@ -17,7 +18,12 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const sort: FeedSort = sp.sort === "desc" ? "desc" : "asc";
 
   const serverNow = new Date().toISOString();
-  const [feed, cities] = await Promise.all([getFeed({ city, sort }), getActiveCities()]);
+  const query = new URLSearchParams({ sort });
+  if (city) query.set("city", city);
+  const [feed, { cities }] = await Promise.all([
+    apiGet<{ trips: FeedTrip[]; nextCursor: string | null }>(`/api/feed?${query}`),
+    apiGet<{ cities: string[] }>("/api/feed/cities"),
+  ]);
 
   return (
     <div className="min-h-screen bg-muted/30">

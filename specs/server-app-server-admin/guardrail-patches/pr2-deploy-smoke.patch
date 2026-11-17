@@ -1,0 +1,50 @@
+diff --git a/.github/workflows/deploy-smoke.yml b/.github/workflows/deploy-smoke.yml
+--- a/.github/workflows/deploy-smoke.yml
++++ b/.github/workflows/deploy-smoke.yml
+@@ -1,26 +1,39 @@
+-# After Vercel reports a successful Production deployment, check that the site really answers.
++# After Vercel reports a successful commit status on main, check that the site really answers.
++# The Vercel integration posts commit statuses (not GitHub Deployments), so this triggers on `status`.
++# Two Vercel projects post statuses; only the frontend one (server-admin, "Vercel" or "Vercel – share-trip") is checked.
+ name: Post-deploy smoke
+ 
+ on:
+-  deployment_status
++  status
+ 
+ permissions:
+   contents: read
+ 
++concurrency:
++  group: deploy-smoke-${{ github.event.sha }}
++  cancel-in-progress: false
++
+ jobs:
+   smoke:
+-    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
++    if: >-
++      github.event.state == 'success'
++      && (github.event.context == 'Vercel' || endsWith(github.event.context, ' share-trip'))
++      && contains(github.event.branches.*.name, 'main')
+     runs-on: ubuntu-latest
+     timeout-minutes: 5
+     steps:
+-      - name: Landing and login answer 200, protected area redirects
++      - name: Pages answer, protected area redirects, API is reachable through the rewrite
+         env:
+-          URL: ${{ github.event.deployment_status.environment_url }}
++          URL: https://share-trip-inky.vercel.app
+         run: |
+           set -euo pipefail
+-          test -n "$URL"
+           code() { curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 5 "$@"; }
+           [ "$(code "$URL/")" = "200" ]       || { echo "landing is not 200"; exit 1; }
+           [ "$(code "$URL/login")" = "200" ]  || { echo "login is not 200"; exit 1; }
+-          [ "$(code "$URL/admin")" = "307" ] || [ "$(code "$URL/admin")" = "302" ] || { echo "/admin does not redirect"; exit 1; }
++          admin=$(code "$URL/admin")
++          [ "$admin" = "307" ] || [ "$admin" = "302" ] || { echo "/admin does not redirect"; exit 1; }
++          health=$(curl -s --retry 3 --retry-delay 5 -w '\n%{http_code}' "$URL/api/health")
++          [ "$(printf '%s' "$health" | tail -n1)" = "200" ] || { echo "/api/health is not 200"; exit 1; }
++          printf '%s' "$health" | sed '$d' | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.exit(JSON.parse(s).status==="ok"?0:1)}catch{process.exit(1)}})' || { echo "/api/health status is not ok"; exit 1; }
++          [ "$(code "$URL/api/admin/users")" = "401" ] || { echo "/api/admin/users is not 401 through the rewrite"; exit 1; }
+           echo "OK: $URL"

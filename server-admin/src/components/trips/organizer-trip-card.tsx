@@ -2,7 +2,7 @@ import { Users } from "lucide-react";
 import { TripCover } from "@/components/trips/trip-cover";
 import { TripStatusBadge } from "@/components/trips/trip-status-badge";
 import { formatDateRange } from "@/lib/format";
-import type { OrganizerTrip } from "@/data/trips";
+import type { OrganizerTrip } from "server-app/shared";
 
 export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
   return (

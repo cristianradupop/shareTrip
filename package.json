@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter server-admin dev",
-    "build": "pnpm --filter server-admin build",
-    "start": "pnpm --filter server-admin start",
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "start": "pnpm -r --parallel start",
     "lint": "pnpm -r lint && eslint e2e playwright.config.ts vitest.config.mts",
     "typecheck": "pnpm -r typecheck && tsc --noEmit",
     "test": "vitest run --reporter=dot",
@@ -14,13 +14,13 @@
     "e2e": "playwright test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "prepare": "git config core.hooksPath .githooks || true",
-    "db:generate": "pnpm --filter server-admin db:generate",
-    "db:migrate": "pnpm --filter server-admin db:migrate",
-    "db:check": "pnpm --filter server-admin db:check",
-    "db:studio": "pnpm --filter server-admin db:studio",
-    "db:seed-admin": "pnpm --filter server-admin db:seed-admin",
-    "db:seed-demo": "pnpm --filter server-admin db:seed-demo",
-    "db:setup-storage": "pnpm --filter server-admin db:setup-storage"
+    "db:generate": "pnpm --filter server-app db:generate",
+    "db:migrate": "pnpm --filter server-app db:migrate",
+    "db:check": "pnpm --filter server-app db:check",
+    "db:studio": "pnpm --filter server-app db:studio",
+    "db:seed-admin": "pnpm --filter server-app db:seed-admin",
+    "db:seed-demo": "pnpm --filter server-app db:seed-demo",
+    "db:setup-storage": "pnpm --filter server-app db:setup-storage"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
