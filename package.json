@@ -23,7 +23,7 @@
     "db:setup-storage": "pnpm --filter server-app db:setup-storage"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.65.1",
     "@types/node": "^20",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
