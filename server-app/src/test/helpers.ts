@@ -12,6 +12,7 @@ export const state = {
   inserts: [] as { table: unknown; values: unknown }[],
   deletes: [] as unknown[],
   updates: [] as unknown[],
+  sets: [] as unknown[],
   result: [{ id: "trip-1" }] as unknown[],
 };
 
@@ -22,6 +23,7 @@ export function reset() {
   state.inserts.length = 0;
   state.deletes.length = 0;
   state.updates.length = 0;
+  state.sets.length = 0;
   state.result = [{ id: "trip-1" }];
   signUpEmail.mockClear();
 }
@@ -36,7 +38,7 @@ export const adminSession = (id = "admin-1"): TestSession => ({
 });
 
 // A chainable, awaitable query builder that records writes.
-function chain(onValues?: (v: unknown) => void, onWrite?: () => void): unknown {
+function chain(onValues?: (v: unknown) => void, onWrite?: () => void, onSet?: (v: unknown) => void): unknown {
   const p: unknown = new Proxy(function () {}, {
     get(_t, prop) {
       if (prop === "then") {
@@ -46,6 +48,13 @@ function chain(onValues?: (v: unknown) => void, onWrite?: () => void): unknown {
       if (prop === "values") {
         return (v: unknown) => {
           onValues?.(v);
+          return p;
+        };
+      }
+      if (prop === "set") {
+        return (v: unknown) => {
+          onSet?.(v);
+          onWrite?.();
           return p;
         };
       }
@@ -63,7 +72,7 @@ function makeDb() {
   const tx = {
     select: () => chain(),
     insert: (table: unknown) => chain((values) => state.inserts.push({ table, values })),
-    update: (table: unknown) => chain(undefined, () => state.updates.push(table)),
+    update: (table: unknown) => chain(undefined, () => state.updates.push(table), (v) => state.sets.push(v)),
     delete: (table: unknown) => chain(undefined, () => state.deletes.push(table)),
   };
   return { ...tx, transaction: async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx) };

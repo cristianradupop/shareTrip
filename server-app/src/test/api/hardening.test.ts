@@ -27,6 +27,7 @@ vi.mock("@/data/requests", () => reqs);
 
 const signup = await import("../../app/api/signup/route");
 const trips = await import("../../app/api/trips/route");
+const tripById = await import("../../app/api/trips/[id]/route");
 const session = await import("../../app/api/session/route");
 const adminUsers = await import("../../app/api/admin/users/route");
 const adminUser = await import("../../app/api/admin/users/[id]/route");
@@ -124,6 +125,15 @@ const cases: Case[] = [
     ok: true,
   },
   {
+    name: "PATCH /api/trips/[id]",
+    call: (h = {}) =>
+      (tripById.PATCH as Handler)(
+        withHeaders(send("PATCH", `/api/trips/${TRIP_ID}`, trip()), h),
+        ctx(TRIP_ID),
+      ),
+    ok: true,
+  },
+  {
     name: "POST /api/admin/users",
     call: (h = {}) =>
       (adminUsers.POST as Handler)(withHeaders(send("POST", "/api/admin/users", userBody({ password: "Strong-Pass-123" })), h)),
@@ -204,6 +214,15 @@ beforeEach(() => {
   reqs.declineRequest.mockResolvedValue(true);
   vi.stubEnv("BETTER_AUTH_URL", `${APP}/some/path`);
   state.session = adminSession("admin-1");
+  // Editable trip row for PATCH /api/trips/[id]; other handlers ignore it.
+  state.result = [
+    {
+      id: "trip-1",
+      status: "active",
+      departureDate: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
+      joined: 0,
+    },
+  ];
 });
 
 describe("same-origin check on mutating handlers", () => {
@@ -248,14 +267,21 @@ describe("JSON handlers require application/json", () => {
 });
 
 describe("gender is carried through", () => {
+  // Look cases up by name: other features add rows to `cases`, so indexes shift.
+  const caseNamed = (name: string) => {
+    const found = cases.find((c) => c.name === name);
+    if (!found) throw new Error(`no hardening case named ${name}`);
+    return found;
+  };
+
   it("POST /api/signup passes the gender to Better Auth", async () => {
-    const res = await cases[0].call();
+    const res = await caseNamed("POST /api/signup").call();
     expect(res.status).toBe(200);
     expect(signUpEmail).toHaveBeenCalledWith({ body: expect.objectContaining({ gender: "female" }) });
   });
 
   it("POST /api/admin/users passes the gender to createCredentialUser", async () => {
-    const res = await cases[2].call();
+    const res = await caseNamed("POST /api/admin/users").call();
     expect(res.status).toBe(200);
     expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ gender: "female" }));
   });

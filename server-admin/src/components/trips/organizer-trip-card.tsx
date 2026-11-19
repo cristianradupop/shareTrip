@@ -1,9 +1,10 @@
 import { Users } from "lucide-react";
+import { EditTripButton } from "@/components/trips/edit-trip-button";
 import { TripCover } from "@/components/trips/trip-cover";
 import { TripRequestsDialog } from "@/components/trips/trip-requests-dialog";
 import { TripStatusBadge } from "@/components/trips/trip-status-badge";
 import { formatDateRange } from "@/lib/format";
-import type { OrganizerTrip } from "server-app/shared";
+import { canEditTrip, type OrganizerTrip } from "server-app/shared";
 
 export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
   return (
@@ -23,7 +24,8 @@ export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
           </span>
           <TripStatusBadge status={trip.status} />
         </div>
-        <div className="pt-2">
+        <div className="flex flex-wrap gap-2 pt-2">
+          {canEditTrip(trip) && <EditTripButton trip={trip} />}
           <TripRequestsDialog trip={trip} />
         </div>
       </div>

@@ -43,6 +43,7 @@ Auth: public = no session needed, user = any signed-in account, admin = role `ad
 | GET | `/api/feed/since` | public, optional session (own trips excluded) | query `since` (ISO date, required), `city` | `{ trips: FeedTrip[], now: string }`; 400 on a bad `since` or `city` |
 | GET | `/api/feed/cities` | public, optional session (own trips excluded) | none | `{ cities: string[] }` |
 | POST | `/api/trips` | user | JSON trip (`destinationCity`, `destinationCountry`, `departureDate`, `returnDate`, `maxTravelers`, `gender`, `budgetEstimate`, `currency`, `transport`, `theme`); the organizer is the session user | `{ ok: true, id }`; 400 invalid data |
+| PATCH | `/api/trips/[id]` | user (organizer of the trip only) | JSON trip, same fields as `POST /api/trips` | `{ ok: true }`; 400 invalid data or `maxTravelers` below the joined count, 404 unknown or not your trip, 409 trip cancelled or already departed |
 | POST | `/api/trips/[id]/request` | user | none | `{ ok: true, viewerState: "requested", joined }`; 400 own trip, 404 unknown trip, 409 cancelled, departed, already member or requested, full, or gender mismatch |
 | DELETE | `/api/trips/[id]/request` | user | none | `{ ok: true, viewerState: "join", joined }` (withdraws the caller's pending request); 404 unknown trip, 409 no pending request or already decided |
 | DELETE | `/api/trips/[id]/membership` | user | none | `{ ok: true, viewerState: "join", joined }` (the caller leaves); 404 unknown trip, 409 not a member or already departed |

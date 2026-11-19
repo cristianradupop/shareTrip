@@ -3,6 +3,7 @@ import {
   ACCOUNT_GENDERS,
   adminCreateUserSchema,
   adminUserSchema,
+  canEditTrip,
   loginSchema,
   profileSchema,
   signUpSchema,
@@ -174,5 +175,23 @@ describe("adminCreateUserSchema", () => {
     expect(adminCreateUserSchema.safeParse({ ...rest, password, role: "admin" }).success).toBe(true);
     expect(adminCreateUserSchema.safeParse({ ...rest, password, role: "owner" }).success).toBe(false);
     expect(adminCreateUserSchema.safeParse({ ...rest, password: "weak", role: "user" }).success).toBe(false);
+  });
+});
+
+describe("canEditTrip", () => {
+  it.each(["active", "full"])("is true for a %s trip departing in the future", (status) => {
+    expect(canEditTrip({ status, departureDate: iso(10) })).toBe(true);
+  });
+
+  it("is true when the departure is today", () => {
+    expect(canEditTrip({ status: "active", departureDate: iso(0) })).toBe(true);
+  });
+
+  it("is false for a cancelled trip", () => {
+    expect(canEditTrip({ status: "cancelled", departureDate: iso(10) })).toBe(false);
+  });
+
+  it("is false when the departure has passed", () => {
+    expect(canEditTrip({ status: "active", departureDate: iso(-1) })).toBe(false);
   });
 });
