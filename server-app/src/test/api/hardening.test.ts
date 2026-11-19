@@ -283,7 +283,10 @@ describe("gender is carried through", () => {
   it("POST /api/admin/users passes the gender to createCredentialUser", async () => {
     const res = await caseNamed("POST /api/admin/users").call();
     expect(res.status).toBe(200);
-    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ gender: "female" }));
+    expect(createUser).toHaveBeenCalledWith(
+      expect.objectContaining({ gender: "female" }),
+      expect.objectContaining({ actor: expect.objectContaining({ id: "admin-1" }) }),
+    );
   });
 
   it("POST /api/admin/users returns 400 without a gender", async () => {

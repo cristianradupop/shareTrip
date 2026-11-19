@@ -21,11 +21,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const parsed = decisionSchema.safeParse(await readJson(req));
   if (!parsed.success) return jsonError(parsed.error.issues[0]?.message ?? "Invalid data", 400);
 
+  const actor = { id: guard.user.id, name: guard.user.name, role: "user" as const };
   if (parsed.data.action === "decline") {
-    if (!(await declineRequest(id, userId))) return jsonError("This request is not pending", 409);
+    if (!(await declineRequest(id, userId, actor))) return jsonError("This request is not pending", 409);
     return Response.json({ ok: true });
   }
-  const result = await approveRequest(id, userId, new Date().toISOString().slice(0, 10));
+  const result = await approveRequest(id, userId, new Date().toISOString().slice(0, 10), actor);
   if (!result.ok) return jsonError(result.error, result.status);
   return Response.json({ ok: true, autoDeclined: result.autoDeclined });
 }

@@ -119,7 +119,7 @@ describe("POST /api/trips/[id]/request", () => {
     const r = send("POST", `/api/trips/${TRIP}/request?userId=evil`, { userId: "evil" });
     await (request.POST as Handler)(r, idCtx(TRIP));
     expect(reqs.loadJoinContext).toHaveBeenCalledWith(TRIP, "real-user");
-    expect(reqs.createJoinRequest).toHaveBeenCalledWith(TRIP, "real-user");
+    expect(reqs.createJoinRequest).toHaveBeenCalledWith(TRIP, "real-user", expect.objectContaining({ id: "real-user" }));
     expect(JSON.stringify(reqs.createJoinRequest.mock.calls)).not.toContain("evil");
   });
 
@@ -200,7 +200,7 @@ describe("POST /api/trips/[id]/request", () => {
     state.session = { ...s!, user: { ...s!.user, gender: "male" } };
     const res = await post();
     expect(res.status).toBe(200);
-    expect(reqs.createJoinRequest).toHaveBeenCalledWith(TRIP, "admin-1");
+    expect(reqs.createJoinRequest).toHaveBeenCalledWith(TRIP, "admin-1", expect.objectContaining({ id: "admin-1" }));
   });
 });
 
@@ -211,7 +211,7 @@ describe("DELETE /api/trips/[id]/request (withdraw)", () => {
     const res = await withdraw();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, viewerState: "join", joined: 2 });
-    expect(reqs.withdrawRequest).toHaveBeenCalledWith(TRIP, "u-1");
+    expect(reqs.withdrawRequest).toHaveBeenCalledWith(TRIP, "u-1", expect.objectContaining({ id: "u-1" }));
   });
 
   it("401 without a session", async () => {
@@ -253,13 +253,13 @@ describe("DELETE /api/trips/[id]/membership (leave)", () => {
     const res = await leave();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, viewerState: "join", joined: 2 });
-    expect(reqs.leaveTrip).toHaveBeenCalledWith(TRIP, "u-1");
+    expect(reqs.leaveTrip).toHaveBeenCalledWith(TRIP, "u-1", expect.objectContaining({ id: "u-1" }));
   });
 
   it("takes the user id from the session", async () => {
     signIn("real-user");
     await leave();
-    expect(reqs.leaveTrip).toHaveBeenCalledWith(TRIP, "real-user");
+    expect(reqs.leaveTrip).toHaveBeenCalledWith(TRIP, "real-user", expect.objectContaining({ id: "real-user" }));
   });
 
   it("401 without a session", async () => {
@@ -351,7 +351,7 @@ describe("PATCH /api/organizer/trips/[id]/requests/[userId]", () => {
     const res = await decide({ action: "approve" });
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ ok: true, autoDeclined: 2 });
-    expect(reqs.approveRequest).toHaveBeenCalledWith(TRIP, "applicant-1", TODAY);
+    expect(reqs.approveRequest).toHaveBeenCalledWith(TRIP, "applicant-1", TODAY, expect.objectContaining({ id: "org-1" }));
     expect(reqs.declineRequest).not.toHaveBeenCalled();
   });
 
@@ -378,7 +378,7 @@ describe("PATCH /api/organizer/trips/[id]/requests/[userId]", () => {
     const res = await decide({ action: "decline" });
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ ok: true });
-    expect(reqs.declineRequest).toHaveBeenCalledWith(TRIP, "applicant-1");
+    expect(reqs.declineRequest).toHaveBeenCalledWith(TRIP, "applicant-1", expect.objectContaining({ id: "org-1" }));
     expect(reqs.approveRequest).not.toHaveBeenCalled();
   });
 

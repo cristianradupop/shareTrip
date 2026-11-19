@@ -2,6 +2,7 @@ import "server-only";
 import { and, count, desc, eq, getTableColumns, gt, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
+import { buildEvent, changedFields, recordEvent, tripSubject, type Actor } from "@/lib/audit";
 import { encodeFeedCursor } from "@/lib/feed-params";
 import { isTripFull, viewerJoinState, type AccountGender, type RequestStatus } from "@/lib/join-rules";
 import type { TripInput } from "@/lib/validators";
@@ -53,25 +54,40 @@ export async function getOrganizerTripForEdit(id: string, organizerId: string) {
   return row ?? null;
 }
 
-/** Updates only the form columns. Returns false when no editable trip of this organizer matched. */
-export async function updateOrganizerTrip(id: string, organizerId: string, t: TripInput): Promise<boolean> {
-  const rows = await db
-    .update(trips)
-    .set({
-      destinationCity: t.destinationCity,
-      destinationCountry: t.destinationCountry,
-      departureDate: t.departureDate,
-      returnDate: t.returnDate || null,
-      maxTravelers: t.maxTravelers,
-      gender: t.gender,
-      budgetEstimate: t.budgetEstimate.toFixed(2),
-      currency: t.currency,
-      transport: t.transport,
-      theme: t.theme,
-    })
-    .where(and(eq(trips.id, id), eq(trips.organizerId, organizerId), ne(trips.status, "cancelled")))
-    .returning({ id: trips.id });
-  return rows.length > 0;
+/**
+ * Updates only the form columns and logs trip.edited with the names of the fields that changed, in one transaction.
+ * The row is locked first so the diff is against what is really overwritten; no event when nothing changed.
+ * Returns false when no editable trip of this organizer matched.
+ */
+export async function updateOrganizerTrip(id: string, organizerId: string, t: TripInput, actor: Actor): Promise<boolean> {
+  const values = {
+    destinationCity: t.destinationCity,
+    destinationCountry: t.destinationCountry,
+    departureDate: t.departureDate,
+    returnDate: t.returnDate || null,
+    maxTravelers: t.maxTravelers,
+    gender: t.gender,
+    budgetEstimate: t.budgetEstimate.toFixed(2),
+    currency: t.currency,
+    transport: t.transport,
+    theme: t.theme,
+  };
+  return db.transaction(async (tx) => {
+    const [before] = await tx
+      .select(getTableColumns(trips))
+      .from(trips)
+      .where(and(eq(trips.id, id), eq(trips.organizerId, organizerId), ne(trips.status, "cancelled")))
+      .for("update");
+    if (!before) return false;
+
+    await tx.update(trips).set(values).where(eq(trips.id, id));
+
+    const fields = changedFields(before, values);
+    if (fields.length > 0) {
+      await recordEvent(tx, buildEvent("trip.edited", actor, tripSubject(before), { changedFields: fields }));
+    }
+    return true;
+  });
 }
 
 export async function getOrganizerStats(organizerId: string): Promise<OrganizerStats> {

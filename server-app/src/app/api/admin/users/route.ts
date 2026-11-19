@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const parsed = adminCreateUserSchema.safeParse(await readJson(req));
   if (!parsed.success) return jsonError(parsed.error.issues[0]?.message ?? "Invalid data", 400);
   try {
-    await createCredentialUser(parsed.data);
+    await createCredentialUser(parsed.data, { actor: { id: guard.user.id, name: guard.user.name } });
   } catch (e) {
     if (isUniqueViolation(e)) return jsonError("That username or email is already in use", 409);
     return jsonError("Could not create the user", 400);

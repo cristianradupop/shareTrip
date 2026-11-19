@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton, UserAvatar } from "@/components/user-menu";
@@ -23,6 +24,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <LogoutButton />
           </div>
         </div>
+        <AdminTabs />
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8">{children}</main>
     </div>

@@ -7,6 +7,7 @@ import { checkCanRequest } from "@/lib/join-rules";
 type Ctx = { params: Promise<{ id: string }> };
 
 const today = () => new Date().toISOString().slice(0, 10);
+const actorOf = (u: { id: string; name: string }) => ({ id: u.id, name: u.name, role: "user" as const });
 
 /** Asks to join a trip. The user is always the session user. */
 export async function POST(req: Request, ctx: Ctx) {
@@ -22,7 +23,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const verdict = checkCanRequest(trip, feedViewer(guard.user), today());
   if (!verdict.ok) return jsonError(verdict.error, verdict.status);
 
-  const created = await createJoinRequest(id, guard.user.id);
+  const created = await createJoinRequest(id, guard.user.id, actorOf(guard.user));
   if (!created.ok) return jsonError(created.error, created.status);
   return Response.json({ ok: true, viewerState: "requested", joined: trip.joined });
 }
@@ -39,6 +40,6 @@ export async function DELETE(req: Request, ctx: Ctx) {
   const trip = await loadJoinContext(id, guard.user.id);
   if (!trip) return jsonError("Trip not found", 404);
   if (trip.isMember || trip.requestStatus !== "pending") return jsonError("You have no pending request for this trip", 409);
-  if (!(await withdrawRequest(id, guard.user.id))) return jsonError("Your request was already decided", 409);
+  if (!(await withdrawRequest(id, guard.user.id, actorOf(guard.user)))) return jsonError("Your request was already decided", 409);
   return Response.json({ ok: true, viewerState: "join", joined: trip.joined });
 }

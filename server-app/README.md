@@ -53,10 +53,13 @@ Auth: public = no session needed, user = any signed-in account, admin = role `ad
 | GET | `/api/organizer/trips` | user | query `limit` (1 to 100) | `{ trips: OrganizerTrip[] }` (own trips only) |
 | GET | `/api/organizer/stats` | user | none | `{ stats: OrganizerStats }` (own trips only) |
 | GET | `/api/admin/users` | admin | query `q` (max 100 chars), `page` | `{ users: AdminUserRow[], total, pages }` |
+| GET | `/api/admin/stats` | admin | none | `AdminStats` (users, trips, requests, members) |
+| GET | `/api/admin/trips` | admin | query `q` (max 100 chars, city or organizer name/email), `status` (`active`/`full`/`cancelled`), `page` | `{ trips: AdminTripRow[], total, page, pageSize }` |
+| GET | `/api/admin/events` | admin | query `view` = `account` \| `activity` \| `audit` | `{ events: AuditEventRow[] }` (latest 300, newest first); 400 unknown view |
 | POST | `/api/admin/users` | admin | JSON `username`, `email`, `firstName`, `lastName`, `phone`, `address`, `birthDate`, `role`, `password` | `{ ok: true }`; 400 invalid data, 409 taken |
-| PATCH | `/api/admin/users/[id]` | admin | JSON as above; `password` optional (empty keeps it) | `{ ok: true }`; 400 invalid or removing your own admin role, 409 taken |
-| DELETE | `/api/admin/users/[id]` | admin | none | `{ ok: true }`; 400 when deleting yourself |
-| POST | `/api/admin/users/[id]/ban` | admin | JSON `banned` (boolean), `reason` (optional) | `{ ok: true }`; 400 invalid or banning yourself; banning ends the user's sessions |
+| PATCH | `/api/admin/users/[id]` | admin | JSON as above; `password` optional (empty keeps it) | `{ ok: true }`; 400 invalid or removing your own admin role, 404 unknown user, 409 taken |
+| DELETE | `/api/admin/users/[id]` | admin | none | `{ ok: true }`; 400 when deleting yourself, 404 unknown user |
+| POST | `/api/admin/users/[id]/ban` | admin | JSON `banned` (boolean), `reason` (optional) | `{ ok: true }`; 400 invalid or banning yourself, 404 unknown user; banning ends the user's sessions |
 
 The response types (`FeedTrip`, `OrganizerTrip`, `OrganizerStats`, `AdminUserRow`, `SessionUser`, `ApiResult`) and the zod validators live in `src/shared/` and are exported as `server-app/shared`. That folder must stay DB-free and use only `zod` and relative imports, because `server-admin` type-checks it with its own `@/` alias.
 

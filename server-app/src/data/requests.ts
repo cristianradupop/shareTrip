@@ -3,6 +3,7 @@ import { and, count, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/api-auth";
+import { buildEvent, recordEvent, tripSubject, type Actor } from "@/lib/audit";
 import {
   ageOn,
   checkCanApprove,
@@ -36,9 +37,25 @@ export async function loadJoinContext(tripId: string, userId: string): Promise<J
   return row ?? null;
 }
 
-export async function createJoinRequest(tripId: string, userId: string): Promise<RuleResult> {
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** The audit subject of a trip, read inside the transaction that logs the event. */
+async function tripSubjectOf(tx: Tx, tripId: string) {
+  const [row] = await tx
+    .select({ id: trips.id, destinationCity: trips.destinationCity, destinationCountry: trips.destinationCountry })
+    .from(trips)
+    .where(eq(trips.id, tripId))
+    .limit(1);
+  if (!row) throw new Error("audit: trip not found");
+  return tripSubject(row);
+}
+
+export async function createJoinRequest(tripId: string, userId: string, actor: Actor): Promise<RuleResult> {
   try {
-    await db.insert(tripRequests).values({ tripId, userId });
+    await db.transaction(async (tx) => {
+      await tx.insert(tripRequests).values({ tripId, userId });
+      await recordEvent(tx, buildEvent("trip.requested", actor, await tripSubjectOf(tx, tripId)));
+    });
   } catch (e) {
     if (isUniqueViolation(e)) return { ok: false, status: 409, error: "You already sent a request for this trip" };
     throw e;
@@ -47,20 +64,28 @@ export async function createJoinRequest(tripId: string, userId: string): Promise
 }
 
 /** Deletes a still-pending request. False when there was nothing pending (it was decided meanwhile). */
-export async function withdrawRequest(tripId: string, userId: string): Promise<boolean> {
-  const deleted = await db
-    .delete(tripRequests)
-    .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId), eq(tripRequests.status, "pending")))
-    .returning({ userId: tripRequests.userId });
-  return deleted.length > 0;
+export async function withdrawRequest(tripId: string, userId: string, actor: Actor): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(tripRequests)
+      .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId), eq(tripRequests.status, "pending")))
+      .returning({ userId: tripRequests.userId });
+    if (deleted.length === 0) return false;
+    await recordEvent(tx, buildEvent("trip.withdrawn", actor, await tripSubjectOf(tx, tripId)));
+    return true;
+  });
 }
 
-export async function leaveTrip(tripId: string, userId: string): Promise<void> {
+export async function leaveTrip(tripId: string, userId: string, actor: Actor): Promise<void> {
   await db.transaction(async (tx) => {
-    await tx.delete(tripMembers).where(and(eq(tripMembers.tripId, tripId), eq(tripMembers.userId, userId)));
+    const left = await tx
+      .delete(tripMembers)
+      .where(and(eq(tripMembers.tripId, tripId), eq(tripMembers.userId, userId)))
+      .returning({ userId: tripMembers.userId });
     await tx
       .delete(tripRequests)
       .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId), eq(tripRequests.status, "approved")));
+    if (left.length > 0) await recordEvent(tx, buildEvent("trip.left", actor, await tripSubjectOf(tx, tripId)));
   });
 }
 
@@ -115,11 +140,14 @@ export async function approveRequest(
   tripId: string,
   userId: string,
   today: string,
+  actor: Actor,
 ): Promise<{ ok: true; autoDeclined: number } | { ok: false; status: number; error: string }> {
   return db.transaction(async (tx) => {
     const [trip] = await tx
       .select({
         organizerId: trips.organizerId,
+        destinationCity: trips.destinationCity,
+        destinationCountry: trips.destinationCountry,
         status: trips.status,
         departureDate: trips.departureDate,
         maxTravelers: trips.maxTravelers,
@@ -131,7 +159,7 @@ export async function approveRequest(
     if (!trip) return { ok: false as const, status: 404, error: "Trip not found" };
 
     const [request] = await tx
-      .select({ status: tripRequests.status, gender: user.gender })
+      .select({ status: tripRequests.status, gender: user.gender, name: user.name })
       .from(tripRequests)
       .innerJoin(user, eq(user.id, tripRequests.userId))
       .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId)))
@@ -165,16 +193,35 @@ export async function approveRequest(
         .returning({ userId: tripRequests.userId });
       autoDeclined = declined.length;
     }
+    await recordEvent(
+      tx,
+      buildEvent(
+        "trip.approved",
+        actor,
+        tripSubject({ id: tripId, destinationCity: trip.destinationCity, destinationCountry: trip.destinationCountry }),
+        { autoDeclined, related: { id: userId, label: request.name } },
+      ),
+    );
     return { ok: true as const, autoDeclined };
   });
 }
 
 /** Declines a pending request. False when there was nothing pending. */
-export async function declineRequest(tripId: string, userId: string): Promise<boolean> {
-  const declined = await db
-    .update(tripRequests)
-    .set({ status: "declined", decidedAt: new Date() })
-    .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId), eq(tripRequests.status, "pending")))
-    .returning({ userId: tripRequests.userId });
-  return declined.length > 0;
+export async function declineRequest(tripId: string, userId: string, actor: Actor): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    const declined = await tx
+      .update(tripRequests)
+      .set({ status: "declined", decidedAt: new Date() })
+      .where(and(eq(tripRequests.tripId, tripId), eq(tripRequests.userId, userId), eq(tripRequests.status, "pending")))
+      .returning({ userId: tripRequests.userId });
+    if (declined.length === 0) return false;
+    const [applicant] = await tx.select({ name: user.name }).from(user).where(eq(user.id, userId)).limit(1);
+    await recordEvent(
+      tx,
+      buildEvent("trip.declined", actor, await tripSubjectOf(tx, tripId), {
+        related: { id: userId, label: applicant?.name ?? "" },
+      }),
+    );
+    return true;
+  });
 }

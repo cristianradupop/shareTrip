@@ -19,6 +19,6 @@ export async function DELETE(req: Request, ctx: Ctx) {
   const verdict = checkCanLeave(trip, new Date().toISOString().slice(0, 10));
   if (!verdict.ok) return jsonError(verdict.error, verdict.status);
 
-  await leaveTrip(id, guard.user.id);
+  await leaveTrip(id, guard.user.id, { id: guard.user.id, name: guard.user.name, role: "user" });
   return Response.json({ ok: true, viewerState: "join", joined: Math.max(0, trip.joined - 1) });
 }
