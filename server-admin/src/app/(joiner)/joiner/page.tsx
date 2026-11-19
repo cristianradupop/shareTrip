@@ -14,16 +14,11 @@ export default async function JoinerPage() {
       <Logo className="text-joiner" />
       <h1 className="text-3xl font-bold">Joiner area — coming soon</h1>
       <p className="max-w-md text-muted-foreground">
-        Browsing and joining trips will be available here. In the meantime you can look at the community feed.
+        Browsing and joining trips will be available here.
       </p>
-      <div className="flex gap-3">
-        <Link href="/feed" className={buttonVariants({ size: "lg" })}>
-          Open the community feed
-        </Link>
-        <Link href="/" className={buttonVariants({ size: "lg", variant: "outline" })}>
-          Back to home
-        </Link>
-      </div>
+      <Link href="/" className={buttonVariants({ size: "lg", variant: "outline" })}>
+        Back to home
+      </Link>
     </div>
   );
 }

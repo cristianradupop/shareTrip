@@ -5,14 +5,15 @@ import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Create an account" };
 
-export default async function SignUpPage() {
+export default async function SignUpPage({ searchParams }: PageProps<"/signup">) {
   if (await getSession()) redirect("/");
+  const { next } = await searchParams;
 
   return (
     <>
       <h1 className="mb-1 text-center text-2xl font-bold text-primary">Create an account</h1>
       <p className="mb-6 text-center text-sm text-muted-foreground">Join the community and start traveling together.</p>
-      <SignUpForm />
+      <SignUpForm next={typeof next === "string" ? next : undefined} />
     </>
   );
 }

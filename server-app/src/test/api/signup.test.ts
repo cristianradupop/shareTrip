@@ -19,6 +19,7 @@ function form(photo?: File) {
   f.set("phone", "+40721000111");
   f.set("address", "Cluj");
   f.set("birthDate", "1995-04-12");
+  f.set("gender", "female");
   if (photo) f.set("photo", photo);
   return f;
 }
@@ -33,6 +34,20 @@ const post = (f: FormData) =>
   (signup.POST as (r: Request) => Promise<Response>)(new Request("http://app.test/api/signup", { method: "POST", body: f }));
 
 beforeEach(reset);
+
+describe("POST /api/signup gender", () => {
+  const jpg = () => new File([bytes(64, [0xff, 0xd8, 0xff])], "p.jpg", { type: "image/jpeg" });
+
+  it.each([["missing", undefined], ["mixed", "mixed"], ["garbage", "robot"]])("rejects a %s gender with 400", async (_n, g) => {
+    const f = form(jpg());
+    f.delete("gender");
+    if (g !== undefined) f.set("gender", g);
+    const res = await post(f);
+    expect(res.status).toBe(400);
+    expect((await res.json()).ok).toBe(false);
+    expect(signUpEmail).not.toHaveBeenCalled();
+  });
+});
 
 describe("POST /api/signup photo rules", () => {
   it("rejects a missing photo", async () => {

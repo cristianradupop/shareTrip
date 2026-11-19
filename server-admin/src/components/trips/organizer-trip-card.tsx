@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import { TripCover } from "@/components/trips/trip-cover";
+import { TripRequestsDialog } from "@/components/trips/trip-requests-dialog";
 import { TripStatusBadge } from "@/components/trips/trip-status-badge";
 import { formatDateRange } from "@/lib/format";
 import type { OrganizerTrip } from "server-app/shared";
@@ -21,6 +22,9 @@ export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
             <span className="text-xs">/ {trip.maxTravelers}</span>
           </span>
           <TripStatusBadge status={trip.status} />
+        </div>
+        <div className="pt-2">
+          <TripRequestsDialog trip={trip} />
         </div>
       </div>
     </article>

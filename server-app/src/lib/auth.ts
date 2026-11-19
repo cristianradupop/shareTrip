@@ -5,6 +5,9 @@ import { nextCookies } from "better-auth/next-js";
 import { admin, username } from "better-auth/plugins";
 import { db } from "@/db/client";
 import * as schema from "@/db/schema";
+import { ACCOUNT_GENDERS } from "@/lib/validators";
+
+const isAccountGender = (g: unknown) => (ACCOUNT_GENDERS as readonly unknown[]).includes(g);
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL,
@@ -22,6 +25,9 @@ export const auth = betterAuth({
       address: { type: "string", required: true },
       // ISO date string (YYYY-MM-DD)
       birthDate: { type: "string", required: true },
+      // "male" | "female". Not `required` here so a CLI regeneration keeps the column nullable (ADR 0003);
+      // the create hook below enforces it.
+      gender: { type: "string", required: false },
     },
   },
   databaseHooks: {
@@ -33,7 +39,18 @@ export const auth = betterAuth({
           if (!newUser.image || !newUser.image.startsWith(prefix)) {
             throw new APIError("BAD_REQUEST", { message: "A profile photo is required" });
           }
+          if (!isAccountGender(newUser.gender)) {
+            throw new APIError("BAD_REQUEST", { message: "Choose your gender" });
+          }
           return { data: newUser };
+        },
+      },
+      update: {
+        before: async (changes) => {
+          if ("gender" in changes && !isAccountGender(changes.gender)) {
+            throw new APIError("BAD_REQUEST", { message: "Choose your gender" });
+          }
+          return { data: changes };
         },
       },
     },

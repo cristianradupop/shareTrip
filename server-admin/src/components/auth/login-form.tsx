@@ -9,13 +9,12 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { safeNext } from "@/lib/safe-next";
 import { loginSchema, type LoginInput } from "server-app/shared";
-
-// Only allow redirects to paths inside this site.
-const safeNext = (next?: string) => (next && next.startsWith("/") && !next.startsWith("//") ? next : null);
 
 export function LoginForm({ next }: { next?: string }) {
   const router = useRouter();
+  const target = safeNext(next);
   const [error, setError] = useState<string | null>(null);
   const {
     register,
@@ -39,7 +38,7 @@ export function LoginForm({ next }: { next?: string }) {
       return;
     }
     const role = (res.data?.user as { role?: string } | undefined)?.role;
-    router.push(safeNext(next) ?? (role === "admin" ? "/admin" : "/"));
+    router.push(target ?? (role === "admin" ? "/admin" : "/"));
     router.refresh();
   }
 
@@ -64,7 +63,7 @@ export function LoginForm({ next }: { next?: string }) {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account yet?{" "}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link href={target ? `/signup?next=${encodeURIComponent(target)}` : "/signup"} className="font-medium text-primary hover:underline">
           Create an account
         </Link>
       </p>

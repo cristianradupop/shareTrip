@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, LogOut, Menu, MessageCircle, PlusCircle, Settings, Briefcase, UserCircle, X } from "lucide-react";
+import { LogOut, Menu, MessageCircle, PlusCircle, Settings, Briefcase, UserCircle, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -13,13 +13,12 @@ import { cn } from "@/lib/utils";
 const items = [
   { href: "/organizer/trips", label: "My Trips", icon: Briefcase },
   { href: "/organizer?new=1", label: "Create Trip", icon: PlusCircle },
-  { href: "/feed", label: "Community feed", icon: Compass },
   { href: "/organizer/messages", label: "Messages", icon: MessageCircle },
   { href: "/organizer/profile", label: "My Profile", icon: UserCircle },
   { href: "/organizer/settings", label: "Settings", icon: Settings },
 ];
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavList({ onNavigate, pendingRequests = 0 }: { onNavigate?: () => void; pendingRequests?: number }) {
   const pathname = usePathname();
   const logout = useLogout();
   return (
@@ -47,6 +46,14 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
             )}
           >
             <Icon className="size-5" /> {label}
+            {href === "/organizer/trips" && pendingRequests > 0 && (
+              <span
+                aria-label={`${pendingRequests} pending requests`}
+                className="ml-auto rounded-full bg-orange-500 px-2 py-0.5 text-xs font-semibold text-white"
+              >
+                {pendingRequests}
+              </span>
+            )}
           </Link>
         );
       })}
@@ -62,9 +69,11 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 
 export function OrganizerShell({
   user,
+  pendingRequests = 0,
   children,
 }: {
   user: { name: string; image?: string | null };
+  pendingRequests?: number;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -73,7 +82,7 @@ export function OrganizerShell({
       {/* desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 border-r bg-card p-5 md:flex">
         <Logo className="text-primary" href="/" />
-        <NavList />
+        <NavList pendingRequests={pendingRequests} />
       </aside>
 
       {/* mobile top bar */}
@@ -86,7 +95,7 @@ export function OrganizerShell({
         </div>
         {open && (
           <div className="flex flex-col border-t p-4">
-            <NavList onNavigate={() => setOpen(false)} />
+            <NavList onNavigate={() => setOpen(false)} pendingRequests={pendingRequests} />
           </div>
         )}
       </div>

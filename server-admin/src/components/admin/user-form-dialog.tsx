@@ -26,7 +26,13 @@ const ROLES = [
   { value: "admin", label: "Administrator" },
 ];
 
-const EMPTY: FormValues = {
+const GENDERS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
+
+// Gender has no default: an account must pick one (older accounts may have none yet).
+const EMPTY: Partial<FormValues> = {
   username: "",
   email: "",
   firstName: "",
@@ -38,9 +44,10 @@ const EMPTY: FormValues = {
   password: "",
 };
 
-const toValues = (user?: AdminUserRow): FormValues =>
+const toValues = (user?: AdminUserRow): Partial<FormValues> =>
   user
     ? {
+        gender: user.gender ?? undefined,
         username: user.username ?? "",
         email: user.email,
         firstName: user.firstName,
@@ -132,6 +139,26 @@ function UserForm({ user, onClose }: { user?: AdminUserRow; onClose: () => void 
             {field("birthDate", "Birth date", "date")}
             {field("address", "Address", "text", true)}
             {field("password", editing ? "New password" : "Password", "password", false, editing ? "Leave empty to keep the current one" : undefined)}
+            <FormField label="Gender" htmlFor="u-gender" error={errors.gender?.message} invalid={Boolean(errors.gender)}>
+              <Controller
+                control={control}
+                name="gender"
+                render={({ field: f }) => (
+                  <Select items={GENDERS} value={f.value ?? null} onValueChange={(v) => f.onChange(v ?? undefined)}>
+                    <SelectTrigger id="u-gender" className="w-full" aria-invalid={Boolean(errors.gender)}>
+                      <SelectValue placeholder="Choose a gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g.value} value={g.value}>
+                          {g.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </FormField>
             <FormField label="Role" htmlFor="u-role" error={errors.role?.message} invalid={Boolean(errors.role)}>
               <Controller
                 control={control}

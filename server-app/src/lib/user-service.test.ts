@@ -30,6 +30,7 @@ const input = {
   address: "Cluj",
   birthDate: "1995-04-12",
   role: "user" as const,
+  gender: "female" as const,
 };
 
 describe("createCredentialUser", () => {
@@ -55,6 +56,13 @@ describe("createCredentialUser", () => {
       displayUsername: "Alex.Popescu",
       name: "Alex Popescu",
     });
+  });
+
+  it("inserts the gender with the user row", async () => {
+    await createCredentialUser(input);
+    expect(inserts[0].values).toMatchObject({ gender: "female" });
+    await createCredentialUser({ ...input, gender: "male" });
+    expect(inserts[2].values).toMatchObject({ gender: "male" });
   });
 
   it("stores only the hash, never the plain password", async () => {
