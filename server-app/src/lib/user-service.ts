@@ -14,6 +14,7 @@ export type NewUserData = {
   phone: string;
   address: string;
   birthDate: string;
+  gender: "male" | "female";
   role: "admin" | "user";
   image?: string | null;
 };
@@ -38,6 +39,7 @@ export async function createCredentialUser(u: NewUserData): Promise<string> {
       phone: u.phone,
       address: u.address,
       birthDate: u.birthDate,
+      gender: u.gender,
     });
     await tx.insert(account).values({
       id: crypto.randomUUID(),

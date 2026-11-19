@@ -16,6 +16,7 @@ export async function GET(req: Request) {
     phone: u.phone ?? "",
     address: u.address ?? "",
     birthDate: u.birthDate ?? "",
+    gender: u.gender === "male" || u.gender === "female" ? u.gender : null,
     image: u.image ?? null,
     role: u.role === "admin" ? "admin" : "user",
   };

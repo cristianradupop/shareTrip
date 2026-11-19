@@ -19,6 +19,7 @@ async function main() {
     phone: "+40000000000",
     address: "N/A",
     birthDate: "1990-01-01",
+    gender: "male",
     role: "admin",
   });
   console.log(`Admin ready: ${ADMIN_EMAIL} (id ${id})`);

@@ -21,13 +21,34 @@ test("signup page renders", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Create an account" })).toBeVisible();
 });
 
-for (const path of ["/admin", "/organizer", "/feed"]) {
+for (const path of ["/admin", "/organizer"]) {
   test(`${path} without a session redirects to /login with a return path`, async ({ page }) => {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login\?next=/);
     expect(new URL(page.url()).searchParams.get("next")).toBe(path);
   });
 }
+
+test("/feed no longer exists: 404, no redirect to login", async ({ page }) => {
+  const res = await page.goto("/feed");
+  expect(res?.status()).toBe(404);
+  expect(new URL(page.url()).pathname).toBe("/feed");
+});
+
+test("landing shows the trips section between the hero and About (error state without a DB)", async ({ page }) => {
+  const res = await page.goto("/");
+  expect(res?.status()).toBe(200);
+  const section = page.locator("section#trips");
+  await expect(section).toBeVisible();
+  await expect(section.getByRole("heading").first()).toBeVisible();
+});
+
+test("the About menu link brings the About heading into view", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "the menu links are hidden below the md breakpoint");
+  await page.goto("/");
+  await page.getByRole("navigation").getByRole("link", { name: "About", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "About TripTogether" })).toBeInViewport();
+});
 
 test("/api/health is proxied to server-app and returns ok JSON", async ({ request }) => {
   const res = await request.get("/api/health");

@@ -8,7 +8,7 @@ Stack: Next.js 16 · React 19 · TypeScript · Tailwind 4 · shadcn/ui (Base UI)
 The instructor requires a client-server application with two modules, so the repo is a pnpm workspace with two Next.js apps (decision: [ADR 0005](docs/adr/0005-two-modules-server-app-server-admin.md)):
 
 - [`server-app/`](server-app/README.md) is the backend: database, Better Auth, photo storage, migrations and a REST API under `/api` (no pages). Port 3001.
-- [`server-admin/`](server-admin/README.md) is the whole web UI (landing, auth, organizer, joiner, admin, feed). It has no DB access and no secrets; it calls server-app over HTTP and rewrites `/api/*` to it, so the browser sees one origin. Port 3000.
+- [`server-admin/`](server-admin/README.md) is the whole web UI (landing with the public trip feed, auth, organizer, joiner, admin). It has no DB access and no secrets; it calls server-app over HTTP and rewrites `/api/*` to it, so the browser sees one origin. Port 3000.
 
 ## Run it locally
 
@@ -17,6 +17,7 @@ pnpm install
 cp server-app/.env.example server-app/.env.local   # then fill it in (see comments inside; never commit it)
 cp server-admin/.env.example server-admin/.env.local   # only SERVER_APP_URL, default http://localhost:3001
 pnpm db:migrate                   # create tables in Supabase
+pnpm db:backfill-gender           # random gender for accounts that have none; run once after migration 0001
 pnpm db:setup-storage             # public bucket for profile photos
 pnpm db:seed-admin                # first administrator (ADMIN_* in server-app/.env.local, password >= 10 chars)
 pnpm db:seed-demo                 # fictional users + trips for the demo
@@ -40,10 +41,9 @@ Demo login: `alex.popescu@demo.test` (or username `alex`) / `Demo-Pass-123!`. Ad
 
 ```
 server-admin/src/app/
-  (main)/        landing page                     <- Organizer dev
+  (main)/        landing page + public trip feed  <- Organizer dev; Joiner dev adds "Join" in the feed card
   (auth)/        login, signup                    <- Organizer dev
   (organizer)/   dashboard, trips, profile        <- Organizer dev
-  feed/          community feed (read-only)       <- shared; Joiner dev adds "Join"
   (joiner)/      Joiner area (placeholder)        <- Joiner dev
   admin/         user management (admins only)    <- Organizer dev
 server-app/src/app/api/       REST endpoints (table in server-app/README.md)  <- shared
@@ -55,7 +55,7 @@ Rules: edit your own zone; changes to shared files (schema, `server-app/src/lib/
 ## For the Joiner developer
 
 - `trip_members` already exists (`tripId`, `userId`, `joinedAt`). The organizer is `trips.organizerId`, not a row in `trip_members`.
-- `FeedTripCard` has an `action` slot: pass your "Join" button there. Spots left = `maxTravelers - joined`.
+- `FeedTripCard` has an `action` slot: pass your "Join" button there. The feed lives on the landing page (`/`). Spots left = `maxTravelers - joined`.
 - Add `chats` / `messages` tables in new files under `server-app/src/db/schema/`, then `pnpm db:generate`.
 - New endpoints go in `server-app/src/app/api/...` and must call `requireApiUser(req)` and check ownership themselves: the database connection bypasses RLS.
 

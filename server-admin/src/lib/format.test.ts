@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDateRange, formatMoney, initials } from "./format";
+import { formatDateRange, formatDay, formatMoney, initials } from "./format";
 
 describe("formatDateRange", () => {
   it("shows a single date when there is no return or it equals departure", () => {
@@ -22,6 +22,18 @@ describe("formatDateRange", () => {
 
   it("does not shift the day across time zones (UTC formatting)", () => {
     expect(formatDateRange("2027-01-01")).toBe("Jan 1, 2027");
+  });
+});
+
+describe("formatDay", () => {
+  it("formats a date as 'Mon D, YYYY' in UTC", () => {
+    expect(formatDay("2027-03-05")).toBe("Mar 5, 2027");
+    expect(formatDay("2027-12-31")).toBe("Dec 31, 2027");
+  });
+
+  it("does not shift the day across time zones", () => {
+    expect(formatDay("2027-01-01")).toBe("Jan 1, 2027");
+    expect(formatDay("2027-01-01T00:00:00.000Z")).toBe("Jan 1, 2027");
   });
 });
 

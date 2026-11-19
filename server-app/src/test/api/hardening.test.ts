@@ -11,14 +11,52 @@ vi.mock("@/lib/auth", async () => (await import("../helpers")).authModule());
 vi.mock("@/lib/storage", () => ({ uploadProfilePhoto: upload, deleteProfilePhoto: vi.fn(async () => undefined) }));
 vi.mock("@/lib/user-service", () => ({ createCredentialUser: createUser }));
 
+// @/data/requests is mocked (names and shapes: see join.test.ts); defaults are set in beforeEach so every
+// new handler can succeed, and a refused request must leave all of them untouched.
+const reqs = vi.hoisted(() => ({
+  loadJoinContext: vi.fn(),
+  createJoinRequest: vi.fn(),
+  withdrawRequest: vi.fn(),
+  leaveTrip: vi.fn(),
+  getTripOwner: vi.fn(),
+  listTripPeople: vi.fn(),
+  approveRequest: vi.fn(),
+  declineRequest: vi.fn(),
+}));
+vi.mock("@/data/requests", () => reqs);
+
 const signup = await import("../../app/api/signup/route");
 const trips = await import("../../app/api/trips/route");
 const session = await import("../../app/api/session/route");
 const adminUsers = await import("../../app/api/admin/users/route");
 const adminUser = await import("../../app/api/admin/users/[id]/route");
 const adminBan = await import("../../app/api/admin/users/[id]/ban/route");
+const profile = await import("../../app/api/profile/route");
+const tripRequest = await import("../../app/api/trips/[id]/request/route");
+const tripMembership = await import("../../app/api/trips/[id]/membership/route");
+const orgDecide = await import("../../app/api/organizer/trips/[id]/requests/[userId]/route");
 
 type Handler = (req: Request, c?: unknown) => Promise<Response>;
+
+const TRIP_ID = "3f2b8c1e-5d4a-4e6f-9a7b-0c1d2e3f4a5b";
+const tripCtx = () => ({ params: Promise.resolve({ id: TRIP_ID }) });
+const decideCtx = () => ({ params: Promise.resolve({ id: TRIP_ID, userId: "applicant-1" }) });
+// A joinable trip for the session user (admin-1); each case overrides what it needs (member, pending request).
+const joinCtx = (over: object = {}) => ({
+  organizerId: "someone-else",
+  status: "active",
+  departureDate: new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10),
+  maxTravelers: 6,
+  tripGender: "mixed",
+  joined: 2,
+  isMember: false,
+  requestStatus: null,
+  ...over,
+});
+const withJoinCtx = <T>(over: object, fn: () => T): T => {
+  reqs.loadJoinContext.mockResolvedValue(joinCtx(over));
+  return fn();
+};
 
 const APP = "https://app.example";
 const EVIL = "https://evil.example";
@@ -42,6 +80,7 @@ const userBody = (extra: object = {}) => ({
   phone: "+40721000111",
   address: "Cluj",
   birthDate: "1995-04-12",
+  gender: "female",
   role: "user",
   ...extra,
 });
@@ -57,6 +96,7 @@ function signupForm(over: Record<string, string> = {}) {
     phone: "+40721000111",
     address: "Cluj",
     birthDate: "1995-04-12",
+    gender: "female",
     ...over,
   };
   for (const [k, v] of Object.entries(fields)) f.set(k, v);
@@ -70,7 +110,7 @@ const withHeaders = (req: Request, h: Record<string, string>) => {
   return new Request(req.url, { method: req.method, headers, body: req.body, ...(req.body ? { duplex: "half" } : {}) } as RequestInit);
 };
 
-type Case = { name: string; call: (h?: Record<string, string>) => Promise<Response>; ok: boolean };
+type Case = { name: string; call: (h?: Record<string, string>) => Promise<Response>; ok: boolean; noBody?: boolean };
 const cases: Case[] = [
   {
     name: "POST /api/signup",
@@ -106,12 +146,62 @@ const cases: Case[] = [
       (adminBan.POST as Handler)(withHeaders(send("POST", "/api/admin/users/u2/ban", { banned: true }), h), ctx("u2")),
     ok: true,
   },
+  {
+    name: "PATCH /api/profile",
+    call: (h = {}) => (profile.PATCH as Handler)(withHeaders(send("PATCH", "/api/profile", { gender: "male" }), h)),
+    ok: true,
+  },
+  {
+    name: "POST /api/trips/[id]/request",
+    call: (h = {}) =>
+      withJoinCtx({}, () =>
+        (tripRequest.POST as Handler)(withHeaders(send("POST", `/api/trips/${TRIP_ID}/request`), h), tripCtx()),
+      ),
+    ok: true,
+    noBody: true,
+  },
+  {
+    name: "DELETE /api/trips/[id]/request",
+    call: (h = {}) =>
+      withJoinCtx({ requestStatus: "pending" }, () =>
+        (tripRequest.DELETE as Handler)(withHeaders(send("DELETE", `/api/trips/${TRIP_ID}/request`), h), tripCtx()),
+      ),
+    ok: true,
+    noBody: true,
+  },
+  {
+    name: "DELETE /api/trips/[id]/membership",
+    call: (h = {}) =>
+      withJoinCtx({ isMember: true, requestStatus: "approved" }, () =>
+        (tripMembership.DELETE as Handler)(withHeaders(send("DELETE", `/api/trips/${TRIP_ID}/membership`), h), tripCtx()),
+      ),
+    ok: true,
+    noBody: true,
+  },
+  {
+    name: "PATCH /api/organizer/trips/[id]/requests/[userId]",
+    call: (h = {}) =>
+      (orgDecide.PATCH as Handler)(
+        withHeaders(send("PATCH", `/api/organizer/trips/${TRIP_ID}/requests/applicant-1`, { action: "approve" }), h),
+        decideCtx(),
+      ),
+    ok: true,
+  },
 ];
 
 beforeEach(() => {
   reset();
   upload.mockClear();
   createUser.mockClear();
+  for (const fn of Object.values(reqs)) fn.mockReset();
+  reqs.loadJoinContext.mockResolvedValue(joinCtx());
+  reqs.createJoinRequest.mockResolvedValue({ ok: true });
+  reqs.withdrawRequest.mockResolvedValue(true);
+  reqs.leaveTrip.mockResolvedValue(undefined);
+  reqs.getTripOwner.mockResolvedValue("admin-1");
+  reqs.listTripPeople.mockResolvedValue({ pending: [], members: [] });
+  reqs.approveRequest.mockResolvedValue({ ok: true, autoDeclined: 0 });
+  reqs.declineRequest.mockResolvedValue(true);
   vi.stubEnv("BETTER_AUTH_URL", `${APP}/some/path`);
   state.session = adminSession("admin-1");
 });
@@ -127,6 +217,9 @@ describe("same-origin check on mutating handlers", () => {
     expect(upload).not.toHaveBeenCalled();
     expect(signUpEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
+    for (const name of ["createJoinRequest", "withdrawRequest", "leaveTrip", "approveRequest", "declineRequest"] as const) {
+      expect(reqs[name]).not.toHaveBeenCalled();
+    }
   });
 
   it.each(cases)("$name: matching Origin works", async ({ call }) => {
@@ -142,7 +235,7 @@ describe("same-origin check on mutating handlers", () => {
 
 describe("JSON handlers require application/json", () => {
   const bad = { "content-type": "text/plain" };
-  it.each(cases.filter((c) => !c.name.includes("signup") && !c.name.startsWith("DELETE")))(
+  it.each(cases.filter((c) => !c.noBody && !c.name.includes("signup") && !c.name.startsWith("DELETE")))(
     "$name returns 415 for text/plain",
     async ({ call }) => {
       const res = await call(bad);
@@ -152,6 +245,28 @@ describe("JSON handlers require application/json", () => {
       expect(state.updates).toHaveLength(0);
     },
   );
+});
+
+describe("gender is carried through", () => {
+  it("POST /api/signup passes the gender to Better Auth", async () => {
+    const res = await cases[0].call();
+    expect(res.status).toBe(200);
+    expect(signUpEmail).toHaveBeenCalledWith({ body: expect.objectContaining({ gender: "female" }) });
+  });
+
+  it("POST /api/admin/users passes the gender to createCredentialUser", async () => {
+    const res = await cases[2].call();
+    expect(res.status).toBe(200);
+    expect(createUser).toHaveBeenCalledWith(expect.objectContaining({ gender: "female" }));
+  });
+
+  it("POST /api/admin/users returns 400 without a gender", async () => {
+    const noGender: Record<string, unknown> = userBody({ password: "Strong-Pass-123" });
+    delete noGender.gender;
+    const res = await (adminUsers.POST as Handler)(send("POST", "/api/admin/users", noGender));
+    expect(res.status).toBe(400);
+    expect(createUser).not.toHaveBeenCalled();
+  });
 });
 
 describe("signup validation order", () => {

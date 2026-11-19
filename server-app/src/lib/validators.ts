@@ -9,6 +9,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 // ---------- Account ----------
 
+export const ACCOUNT_GENDERS = ["male", "female"] as const;
+const accountGender = z.enum(ACCOUNT_GENDERS, "Choose your gender");
+
 export const signUpSchema = z.object({
   username: z
     .string()
@@ -32,8 +35,12 @@ export const signUpSchema = z.object({
     .regex(/^\+?[0-9 ()-]{7,20}$/, "Enter a valid phone number"),
   address: requiredText("Address", 200),
   birthDate: isoDate.refine((d) => d < today(), "Birth date must be in the past"),
+  gender: accountGender,
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;
+
+export const profileSchema = z.object({ gender: accountGender });
+export type ProfileInput = z.infer<typeof profileSchema>;
 
 export const loginSchema = z.object({
   identifier: requiredText("Username or email", 254),
@@ -101,6 +108,7 @@ export const adminUserSchema = z.object({
   phone: signUpSchema.shape.phone,
   address: signUpSchema.shape.address,
   birthDate: signUpSchema.shape.birthDate,
+  gender: signUpSchema.shape.gender,
   role: z.enum(["user", "admin"]),
 });
 export type AdminUserInput = z.infer<typeof adminUserSchema>;

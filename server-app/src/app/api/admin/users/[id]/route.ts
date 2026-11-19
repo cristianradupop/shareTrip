@@ -41,6 +41,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
           phone: d.phone,
           address: d.address,
           birthDate: d.birthDate,
+          gender: d.gender,
           role: d.role,
         })
         .where(eq(user.id, id));

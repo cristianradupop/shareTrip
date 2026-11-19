@@ -1,8 +1,10 @@
 import { getActiveCities } from "@/data/trips";
-import { requireApiUser } from "@/lib/api-auth";
+import { getApiSession } from "@/lib/api-auth";
+
+const NO_STORE = { "Cache-Control": "private, no-store" };
 
 export async function GET(req: Request) {
-  const guard = await requireApiUser(req);
-  if (!guard.ok) return guard.response;
-  return Response.json({ cities: await getActiveCities() });
+  const session = await getApiSession(req);
+  const cities = await getActiveCities({ excludeOrganizerId: session?.user.id });
+  return Response.json({ cities }, { headers: NO_STORE });
 }
