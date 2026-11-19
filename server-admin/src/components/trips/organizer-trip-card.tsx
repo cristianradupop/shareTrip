@@ -1,8 +1,9 @@
 import { Users } from "lucide-react";
+import { EditTripButton } from "@/components/trips/edit-trip-button";
 import { TripCover } from "@/components/trips/trip-cover";
 import { TripStatusBadge } from "@/components/trips/trip-status-badge";
 import { formatDateRange } from "@/lib/format";
-import type { OrganizerTrip } from "server-app/shared";
+import { canEditTrip, type OrganizerTrip } from "server-app/shared";
 
 export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
   return (
@@ -22,6 +23,11 @@ export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
           </span>
           <TripStatusBadge status={trip.status} />
         </div>
+        {canEditTrip(trip) && (
+          <div className="pt-2">
+            <EditTripButton trip={trip} />
+          </div>
+        )}
       </div>
     </article>
   );

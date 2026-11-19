@@ -43,6 +43,7 @@ Auth: public = no session needed, user = any signed-in account, admin = role `ad
 | GET | `/api/feed/since` | user | query `since` (ISO date, required), `city` | `{ trips: FeedTrip[], now: string }`; 400 on a bad date |
 | GET | `/api/feed/cities` | user | none | `{ cities: string[] }` |
 | POST | `/api/trips` | user | JSON trip (`destinationCity`, `destinationCountry`, `departureDate`, `returnDate`, `maxTravelers`, `gender`, `budgetEstimate`, `currency`, `transport`, `theme`); the organizer is the session user | `{ ok: true, id }`; 400 invalid data |
+| PATCH | `/api/trips/[id]` | user (organizer of the trip only) | JSON trip, same fields as `POST /api/trips` | `{ ok: true }`; 400 invalid data or `maxTravelers` below the joined count, 404 unknown or not your trip, 409 trip cancelled or already departed |
 | GET | `/api/organizer/trips` | user | query `limit` (1 to 100) | `{ trips: OrganizerTrip[] }` (own trips only) |
 | GET | `/api/organizer/stats` | user | none | `{ stats: OrganizerStats }` (own trips only) |
 | GET | `/api/admin/users` | admin | query `q` (max 100 chars), `page` | `{ users: AdminUserRow[], total, pages }` |

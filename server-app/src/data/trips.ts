@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, count, desc, eq, getTableColumns, gt, gte, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, gt, gte, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, trips, user } from "@/db/schema";
+import type { TripInput } from "@/lib/validators";
 import type { FeedSort, FeedTrip, OrganizerStats, OrganizerTrip } from "@/shared/types";
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -25,6 +26,38 @@ export async function getOrganizerTrips(organizerId: string, limit?: number): Pr
     .orderBy(desc(trips.createdAt));
   const rows = await (limit ? query.limit(limit) : query);
   return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+}
+
+/** The trip as needed for an edit check, only if it belongs to `organizerId`. */
+export async function getOrganizerTripForEdit(id: string, organizerId: string) {
+  const [row] = await db
+    .select({ id: trips.id, status: trips.status, departureDate: trips.departureDate, joined: joinedExpr })
+    .from(trips)
+    .leftJoin(joinedCounts, eq(joinedCounts.tripId, trips.id))
+    .where(and(eq(trips.id, id), eq(trips.organizerId, organizerId)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Updates only the form columns. Returns false when no editable trip of this organizer matched. */
+export async function updateOrganizerTrip(id: string, organizerId: string, t: TripInput): Promise<boolean> {
+  const rows = await db
+    .update(trips)
+    .set({
+      destinationCity: t.destinationCity,
+      destinationCountry: t.destinationCountry,
+      departureDate: t.departureDate,
+      returnDate: t.returnDate || null,
+      maxTravelers: t.maxTravelers,
+      gender: t.gender,
+      budgetEstimate: t.budgetEstimate.toFixed(2),
+      currency: t.currency,
+      transport: t.transport,
+      theme: t.theme,
+    })
+    .where(and(eq(trips.id, id), eq(trips.organizerId, organizerId), ne(trips.status, "cancelled")))
+    .returning({ id: trips.id });
+  return rows.length > 0;
 }
 
 export async function getOrganizerStats(organizerId: string): Promise<OrganizerStats> {

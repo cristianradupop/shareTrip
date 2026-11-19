@@ -15,7 +15,7 @@ Package manager is pnpm (`packageManager` is pinned); Node 24 (`.nvmrc`). The re
 - `pnpm dev` (both apps) / `pnpm build` (both) / `pnpm start`
 - `pnpm lint` · `pnpm typecheck` (runs `next typegen` first, then `tsc --noEmit`)
 - `pnpm test` (Vitest, `*/src/**/*.test.ts`, no DB: `@/db/client` is mocked) · `pnpm test:file server-admin/src/lib/format.test.ts` for one file
-- `pnpm e2e` (Playwright smoke in `e2e/`, starts both production builds, server-app on :3001 and server-admin on :3100, so run `pnpm build` first; needs no DB or secrets)
+- `pnpm e2e` (Playwright smoke in `e2e/`, starts both production builds, server-app on :3001 and server-admin on :3100, so run `pnpm build` first; needs no DB or secrets). After a `@playwright/test` version bump (Dependabot), run `pnpm exec playwright install chromium` once, or every test fails with "Executable doesn't exist"
 - `pnpm check` = lint + typecheck + unit tests; the same gate runs locally (hooks) and in CI
 - Database (Drizzle, uses `DIRECT_URL`, goes to server-app): `pnpm db:generate` after editing `server-app/src/db/schema/*`, commit the new SQL in `server-app/drizzle/`; `pnpm db:migrate`; `pnpm db:check`; `pnpm db:studio`
 - Scripts (read `server-app/.env.local` via `tsx --env-file`): `pnpm db:seed-admin`, `pnpm db:seed-demo`, `pnpm db:setup-storage`
@@ -55,6 +55,7 @@ Edit your own zone; changes to shared files (`server-app/src/db/schema`, `server
   - lint: `pnpm lint` · types: `pnpm typecheck`
   - full check, same as pre-commit and CI: `pnpm check`
   - end-to-end / run the app: `pnpm build && pnpm e2e` · `pnpm dev`
+  - in-app checks log in as the demo user `alex` (README) and use trips alex owns: the admin password lives only in `server-app/.env.local`, which agents can't read. `pnpm dev` writes to the real Supabase DB, so record and restore any trip an agent edits.
 - Specs and plans: `specs/<slug>/`. Decisions: `docs/adr/`. Mistakes not to repeat: `docs/learnings.md`, read before planning.
 - Roles: `.claude/agents/harness-*.md`. LEARN may refine them, with approval; it never loosens them or touches hooks, settings or CI.
 - Agents commit and push only when the user explicitly asks (`git push` always prompts for confirmation, via an `ask` rule in `.claude/settings.json`); never on their own initiative, never to `main`, never force-push. Keep this file under 200 lines.

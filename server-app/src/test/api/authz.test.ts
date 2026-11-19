@@ -7,6 +7,7 @@ vi.mock("@/lib/auth", async () => (await import("../helpers")).authModule());
 
 const session = await import("../../app/api/session/route");
 const trips = await import("../../app/api/trips/route");
+const trip = await import("../../app/api/trips/[id]/route");
 const orgTrips = await import("../../app/api/organizer/trips/route");
 const orgStats = await import("../../app/api/organizer/stats/route");
 const feed = await import("../../app/api/feed/route");
@@ -36,6 +37,14 @@ const validTrip = () => {
 
 const userEndpoints: Endpoint[] = [
   { name: "POST /api/trips", call: () => (trips.POST as Handler)(send("POST", "/api/trips", validTrip())) },
+  {
+    name: "PATCH /api/trips/[id]",
+    call: () =>
+      (trip.PATCH as Handler)(
+        send("PATCH", "/api/trips/3f2b8a52-6c1d-4e0a-9d6b-0a1b2c3d4e5f", validTrip()),
+        ctx("3f2b8a52-6c1d-4e0a-9d6b-0a1b2c3d4e5f"),
+      ),
+  },
   { name: "GET /api/organizer/trips", call: () => (orgTrips.GET as Handler)(get("/api/organizer/trips?limit=5")) },
   { name: "GET /api/organizer/stats", call: () => (orgStats.GET as Handler)(get("/api/organizer/stats")) },
   { name: "GET /api/feed", call: () => (feed.GET as Handler)(get("/api/feed?sort=asc")) },

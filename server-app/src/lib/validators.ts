@@ -91,6 +91,10 @@ export const tripSchema = z
 export type TripFormInput = z.input<typeof tripSchema>;
 export type TripInput = z.output<typeof tripSchema>;
 
+// A trip stays editable until it is cancelled or its departure day has passed.
+export const canEditTrip = (trip: { status: string; departureDate: string }, now = today()) =>
+  trip.status !== "cancelled" && trip.departureDate >= now;
+
 // ---------- Admin: user management ----------
 
 export const adminUserSchema = z.object({
