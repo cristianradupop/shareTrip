@@ -8,14 +8,14 @@ import { ensureUser, type SeedUser } from "./_users";
 const DEMO_PASSWORD = "Demo-Pass-123!";
 
 const people: Omit<SeedUser, "password" | "role">[] = [
-  { email: "alex.popescu@demo.test", username: "alex", firstName: "Alex", lastName: "Popescu", phone: "+40700000001", address: "Cluj-Napoca, Romania", birthDate: "1996-04-12" },
-  { email: "maria.ionescu@demo.test", username: "maria", firstName: "Maria", lastName: "Ionescu", phone: "+40700000002", address: "Brasov, Romania", birthDate: "1998-09-03" },
-  { email: "andrei.dumitru@demo.test", username: "andrei", firstName: "Andrei", lastName: "Dumitru", phone: "+40700000003", address: "Bucharest, Romania", birthDate: "1994-01-27" },
-  { email: "ioana.marin@demo.test", username: "ioana", firstName: "Ioana", lastName: "Marin", phone: "+40700000004", address: "Sibiu, Romania", birthDate: "2000-06-18" },
-  { email: "radu.stan@demo.test", username: "radu", firstName: "Radu", lastName: "Stan", phone: "+40700000005", address: "Timisoara, Romania", birthDate: "1993-11-09" },
-  { email: "elena.toma@demo.test", username: "elena", firstName: "Elena", lastName: "Toma", phone: "+40700000006", address: "Iasi, Romania", birthDate: "1997-02-21" },
-  { email: "vlad.georgescu@demo.test", username: "vlad", firstName: "Vlad", lastName: "Georgescu", phone: "+40700000007", address: "Constanta, Romania", birthDate: "1999-07-30" },
-  { email: "ana.radu@demo.test", username: "ana", firstName: "Ana", lastName: "Radu", phone: "+40700000008", address: "Oradea, Romania", birthDate: "2001-12-05" },
+  { email: "alex.popescu@demo.test", username: "alex", firstName: "Alex", lastName: "Popescu", phone: "+40700000001", address: "Cluj-Napoca, Romania", birthDate: "1996-04-12", gender: "male" },
+  { email: "maria.ionescu@demo.test", username: "maria", firstName: "Maria", lastName: "Ionescu", phone: "+40700000002", address: "Brasov, Romania", birthDate: "1998-09-03", gender: "female" },
+  { email: "andrei.dumitru@demo.test", username: "andrei", firstName: "Andrei", lastName: "Dumitru", phone: "+40700000003", address: "Bucharest, Romania", birthDate: "1994-01-27", gender: "male" },
+  { email: "ioana.marin@demo.test", username: "ioana", firstName: "Ioana", lastName: "Marin", phone: "+40700000004", address: "Sibiu, Romania", birthDate: "2000-06-18", gender: "female" },
+  { email: "radu.stan@demo.test", username: "radu", firstName: "Radu", lastName: "Stan", phone: "+40700000005", address: "Timisoara, Romania", birthDate: "1993-11-09", gender: "male" },
+  { email: "elena.toma@demo.test", username: "elena", firstName: "Elena", lastName: "Toma", phone: "+40700000006", address: "Iasi, Romania", birthDate: "1997-02-21", gender: "female" },
+  { email: "vlad.georgescu@demo.test", username: "vlad", firstName: "Vlad", lastName: "Georgescu", phone: "+40700000007", address: "Constanta, Romania", birthDate: "1999-07-30", gender: "male" },
+  { email: "ana.radu@demo.test", username: "ana", firstName: "Ana", lastName: "Radu", phone: "+40700000008", address: "Oradea, Romania", birthDate: "2001-12-05", gender: "female" },
 ];
 
 type Gender = "male" | "female" | "mixed";

@@ -15,6 +15,15 @@ export function formatDateRange(departure: string, back?: string | null) {
   return `${month(a)} ${day(a)}, ${year(a)} – ${month(b)} ${day(b)}, ${year(b)}`;
 }
 
+export function formatDay(iso: string) {
+  return parse(iso.slice(0, 10)).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function formatMoney(amount: string | number, currency: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",

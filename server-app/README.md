@@ -39,11 +39,17 @@ Auth: public = no session needed, user = any signed-in account, admin = role `ad
 | GET, POST | `/api/auth/[...all]` | public (Better Auth decides) | Better Auth routes (sign-in, sign-out, ...); DB rate limited | Better Auth responses |
 | GET | `/api/session` | public | none (reads the cookie) | `{ user: SessionUser \| null }`, `Cache-Control: private, no-store` |
 | POST | `/api/signup` | public | multipart: `username`, `password`, `firstName`, `lastName`, `email`, `phone`, `address`, `birthDate`, `photo` (JPG/PNG, max 2 MB) | `{ ok: true }` and the session cookie; 400 invalid data or photo, 409 username or email taken |
-| GET | `/api/feed` | user | query `city`, `sort` (`asc` or `desc`), `cursor` | `{ trips: FeedTrip[], nextCursor: string \| null }` |
-| GET | `/api/feed/since` | user | query `since` (ISO date, required), `city` | `{ trips: FeedTrip[], now: string }`; 400 on a bad date |
-| GET | `/api/feed/cities` | user | none | `{ cities: string[] }` |
+| GET | `/api/feed` | public, optional session (a signed-in user's own trips are excluded) | query `city`, `cursor` (newest first, pages of 20) | `{ trips: FeedTrip[], nextCursor: string \| null, now: string }`; with a session each trip has `viewerState` (`join`, `requested`, `declined`, `joined`, `full`, `wrong_gender`); 400 on a bad `cursor` or `city` |
+| GET | `/api/feed/since` | public, optional session (own trips excluded) | query `since` (ISO date, required), `city` | `{ trips: FeedTrip[], now: string }`; 400 on a bad `since` or `city` |
+| GET | `/api/feed/cities` | public, optional session (own trips excluded) | none | `{ cities: string[] }` |
 | POST | `/api/trips` | user | JSON trip (`destinationCity`, `destinationCountry`, `departureDate`, `returnDate`, `maxTravelers`, `gender`, `budgetEstimate`, `currency`, `transport`, `theme`); the organizer is the session user | `{ ok: true, id }`; 400 invalid data |
 | PATCH | `/api/trips/[id]` | user (organizer of the trip only) | JSON trip, same fields as `POST /api/trips` | `{ ok: true }`; 400 invalid data or `maxTravelers` below the joined count, 404 unknown or not your trip, 409 trip cancelled or already departed |
+| POST | `/api/trips/[id]/request` | user | none | `{ ok: true, viewerState: "requested", joined }`; 400 own trip, 404 unknown trip, 409 cancelled, departed, already member or requested, full, or gender mismatch |
+| DELETE | `/api/trips/[id]/request` | user | none | `{ ok: true, viewerState: "join", joined }` (withdraws the caller's pending request); 404 unknown trip, 409 no pending request or already decided |
+| DELETE | `/api/trips/[id]/membership` | user | none | `{ ok: true, viewerState: "join", joined }` (the caller leaves); 404 unknown trip, 409 not a member or already departed |
+| GET | `/api/organizer/trips/[id]/requests` | user, the trip's organizer only (admins get no exception) | none | `{ pending: Person[], members: Person[] }` (name, image, age, gender only), `Cache-Control: private, no-store`; 404 unknown trip or not yours |
+| PATCH | `/api/organizer/trips/[id]/requests/[userId]` | user, the trip's organizer only | JSON `action`: `approve` or `decline` | `{ ok: true }`, approve also `autoDeclined` (other requests declined when the trip filled); 400 bad action, 404 unknown trip or not yours, 409 not pending, full, departed or gender mismatch |
+| PATCH | `/api/profile` | user | JSON `gender` (`male` or `female`) | `{ ok: true }`; 400 invalid |
 | GET | `/api/organizer/trips` | user | query `limit` (1 to 100) | `{ trips: OrganizerTrip[] }` (own trips only) |
 | GET | `/api/organizer/stats` | user | none | `{ stats: OrganizerStats }` (own trips only) |
 | GET | `/api/admin/users` | admin | query `q` (max 100 chars), `page` | `{ users: AdminUserRow[], total, pages }` |

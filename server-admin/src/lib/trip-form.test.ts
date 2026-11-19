@@ -18,6 +18,7 @@ const trip: OrganizerTrip = {
   status: "active",
   createdAt: "2026-11-01T10:00:00.000Z",
   joined: 2,
+  pending: 0,
 };
 
 describe("toTripFormValues", () => {

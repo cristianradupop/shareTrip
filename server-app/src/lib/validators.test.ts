@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { adminCreateUserSchema, canEditTrip, loginSchema, signUpSchema, tripSchema } from "./validators";
+import {
+  ACCOUNT_GENDERS,
+  adminCreateUserSchema,
+  adminUserSchema,
+  canEditTrip,
+  loginSchema,
+  profileSchema,
+  signUpSchema,
+  tripSchema,
+} from "./validators";
 
 const iso = (offsetDays: number) => new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
 
@@ -12,6 +21,7 @@ const validSignUp = {
   phone: "+40 721 000 111",
   address: "Str. Exemplu 1, Cluj",
   birthDate: "1995-04-12",
+  gender: "male",
 };
 
 const validTrip = {
@@ -64,6 +74,50 @@ describe("signUpSchema", () => {
   it("rejects an invalid email and phone", () => {
     expect(signUpSchema.safeParse({ ...validSignUp, email: "not-an-email" }).success).toBe(false);
     expect(signUpSchema.safeParse({ ...validSignUp, phone: "abc" }).success).toBe(false);
+  });
+
+  it.each(["male", "female"])("accepts gender %s", (gender) => {
+    const r = signUpSchema.safeParse({ ...validSignUp, gender });
+    expect(r.success && r.data.gender).toBe(gender);
+  });
+
+  it.each([["missing", undefined], ["empty", ""], ["mixed", "mixed"], ["garbage", "robot"], ["wrong case", "Male"]])(
+    "rejects a %s gender",
+    (_n, gender) => {
+      const r = signUpSchema.safeParse({ ...validSignUp, gender });
+      expect(r.success).toBe(false);
+      expect(issues(r).some((m) => m.startsWith("gender"))).toBe(true);
+    },
+  );
+});
+
+describe("ACCOUNT_GENDERS", () => {
+  it("is exactly male and female (no 'mixed')", () => {
+    expect([...ACCOUNT_GENDERS]).toEqual(["male", "female"]);
+  });
+});
+
+describe("profileSchema", () => {
+  it.each(["male", "female"])("accepts { gender: %s }", (gender) => {
+    expect(profileSchema.safeParse({ gender }).success).toBe(true);
+  });
+
+  it.each([{}, { gender: "mixed" }, { gender: "" }, { gender: 1 }])("rejects %j", (body) => {
+    expect(profileSchema.safeParse(body).success).toBe(false);
+  });
+});
+
+describe("adminUserSchema gender", () => {
+  const body: Record<string, unknown> = { ...validSignUp, role: "user" };
+  delete body.password;
+  it("accepts male and female", () => {
+    expect(adminUserSchema.safeParse({ ...body, gender: "female" }).success).toBe(true);
+  });
+  it("requires a valid gender", () => {
+    const noGender = { ...body };
+    delete noGender.gender;
+    expect(adminUserSchema.safeParse(noGender).success).toBe(false);
+    expect(adminUserSchema.safeParse({ ...body, gender: "mixed" }).success).toBe(false);
   });
 });
 

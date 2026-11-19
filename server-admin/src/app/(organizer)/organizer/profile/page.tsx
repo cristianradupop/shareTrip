@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GenderForm } from "@/components/organizer/gender-form";
 import { UserAvatar } from "@/components/user-menu";
 import { requireUser } from "@/lib/session";
 
@@ -32,6 +33,12 @@ export default async function ProfilePage() {
               <dd className="text-right font-medium">{v}</dd>
             </div>
           ))}
+          <div className="flex items-center justify-between gap-4 py-3">
+            <dt className="text-muted-foreground">Gender</dt>
+            <dd>
+              <GenderForm current={user.gender} />
+            </dd>
+          </div>
         </dl>
       </div>
     </div>

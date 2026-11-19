@@ -4,7 +4,7 @@ import { checkSameOrigin, jsonError } from "@/lib/api-auth";
 import { deleteProfilePhoto, uploadProfilePhoto } from "@/lib/storage";
 import { signUpSchema } from "@/lib/validators";
 
-const FIELDS = ["username", "password", "firstName", "lastName", "email", "phone", "address", "birthDate"] as const;
+const FIELDS = ["username", "password", "firstName", "lastName", "email", "phone", "address", "birthDate", "gender"] as const;
 
 /** Creates the account: validate -> upload photo -> sign up (which also logs the user in). */
 export async function POST(req: Request) {
@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         phone: data.phone,
         address: data.address,
         birthDate: data.birthDate,
+        gender: data.gender,
       },
     });
     return Response.json({ ok: true });

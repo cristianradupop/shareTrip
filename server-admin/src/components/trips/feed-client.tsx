@@ -1,110 +1,172 @@
 "use client";
 
-import { ArrowDownUp, Filter, RefreshCw } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { Filter, Loader2, MapPinned, RefreshCw } from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FeedTripCard } from "@/components/trips/feed-trip-card";
-import type { FeedSort, FeedTrip } from "server-app/shared";
+import { JoinAction } from "@/components/trips/join-action";
+import type { FeedTrip } from "server-app/shared";
 import { clientFetch } from "@/lib/client-api";
+import { feedQuery, feedReducer, type FeedState } from "@/lib/feed-state";
 
 const ALL = "__all__";
-const SORT_ITEMS = [
-  { value: "asc", label: "Most recent to farthest departure date" },
-  { value: "desc", label: "Farthest to most recent departure date" },
-];
 const ERROR_MESSAGE = "Sorry, but for the moment we don't have information for you";
-
-function query(params: Record<string, string | undefined>) {
-  const q = new URLSearchParams();
-  for (const [k, v] of Object.entries(params)) if (v) q.set(k, v);
-  return q.toString();
-}
 
 export function FeedClient({
   initialTrips,
   initialCursor,
   cities,
-  city,
-  sort,
   serverNow,
+  initialError = false,
+  citiesError = false,
 }: {
   initialTrips: FeedTrip[];
   initialCursor: string | null;
   cities: string[];
-  city?: string;
-  sort: FeedSort;
   serverNow: string;
+  initialError?: boolean;
+  citiesError?: boolean;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const params = useSearchParams();
-
-  const [trips, setTrips] = useState(initialTrips);
-  const [cursor, setCursor] = useState(initialCursor);
-  const [since, setSince] = useState(serverNow); // everything published after this is "new"
+  const [state, dispatch] = useReducer(
+    feedReducer,
+    undefined,
+    (): FeedState => ({
+      trips: initialTrips,
+      cursor: initialCursor,
+      done: !initialError && initialCursor === null,
+      gen: 0,
+      city: undefined,
+      since: serverNow,
+      error: initialError,
+    }),
+  );
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
-  const [refreshing, startRefresh] = useTransition();
-  const [loadingMore, startLoadMore] = useTransition();
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  function setParam(key: string, value: string | null) {
-    const next = new URLSearchParams(params.toString());
-    if (value) next.set(key, value);
-    else next.delete(key);
-    router.replace(`${pathname}?${next.toString()}`);
-  }
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const inFlight = useRef<number | null>(null); // generation of the request in flight
+  const heightBefore = useRef<number | null>(null);
+  const currentGen = useRef(0);
+  const citiesPending = useRef(initialError || citiesError); // the city list is empty when its first load failed
+  const [cityList, setCityList] = useState(cities);
 
-  function refresh() {
-    startRefresh(async () => {
-      try {
-        const res = await clientFetch<{ trips: FeedTrip[]; now: string }>(`/api/feed/since?${query({ since, city })}`);
-        if (!res.ok) throw new Error(res.error);
-        const { trips: fresh, now } = res;
-        setSince(now);
-        const known = new Set(trips.map((t) => t.id));
-        const added = fresh.filter((t) => !known.has(t.id));
-        if (added.length === 0) {
-          toast.info("You are up to date");
-          return;
-        }
-        // New trips first, followed by the old ones.
-        setTrips([...added, ...trips]);
-        setNewIds(new Set([...newIds, ...added.map((t) => t.id)]));
-        toast.success(`${added.length} new ${added.length === 1 ? "trip" : "trips"}`);
-      } catch {
-        // Keep the old feed, tell the user (spec).
-        toast.error(ERROR_MESSAGE);
-      }
+  const { gen, city, cursor, done, error } = state;
+
+  const loadCities = useCallback(async () => {
+    if (!citiesPending.current) return;
+    citiesPending.current = false;
+    const citiesRes = await clientFetch<{ cities: string[] }>("/api/feed/cities");
+    if (citiesRes.ok) setCityList(citiesRes.cities);
+    else citiesPending.current = true;
+  }, []);
+
+  const loadPage = useCallback(async () => {
+    if (inFlight.current === gen) return;
+    inFlight.current = gen;
+    setLoading(true);
+    const res = await clientFetch<{ trips: FeedTrip[]; nextCursor: string | null; now: string }>(
+      `/api/feed?${feedQuery({ city, cursor: cursor ?? undefined })}`,
+    );
+    if (inFlight.current === gen) {
+      inFlight.current = null;
+      setLoading(false);
+    }
+    if (!res.ok) {
+      dispatch({ type: "failed", gen });
+      return;
+    }
+    // A reply for a replaced generation is ignored by the reducer, so it must not leave a height behind.
+    if (currentGen.current === gen) {
+      // If the end of the list is above the viewport (the visitor jumped to About or Contact), remember its height.
+      const list = listRef.current;
+      heightBefore.current = list && list.getBoundingClientRect().bottom < 0 ? list.offsetHeight : null;
+    }
+    dispatch({ type: "pageLoaded", gen, page: { trips: res.trips, nextCursor: res.nextCursor, now: res.now } });
+    await loadCities();
+  }, [gen, city, cursor, loadCities]);
+
+  useEffect(() => {
+    currentGen.current = gen;
+  }, [gen]);
+
+  useEffect(() => {
+    if (!citiesError || initialError) return;
+    citiesPending.current = false;
+    void clientFetch<{ cities: string[] }>("/api/feed/cities").then((res) => {
+      if (res.ok) setCityList(res.cities);
+      else citiesPending.current = true;
     });
-  }
+  }, [citiesError, initialError]);
 
-  function loadMore() {
-    if (!cursor) return;
-    startLoadMore(async () => {
-      try {
-        const res = await clientFetch<{ trips: FeedTrip[]; nextCursor: string | null }>(
-          `/api/feed?${query({ city, sort, cursor })}`,
-        );
-        if (!res.ok) throw new Error(res.error);
-        const page = res;
-        const known = new Set(trips.map((t) => t.id));
-        setTrips([...trips, ...page.trips.filter((t) => !known.has(t.id))]);
-        setCursor(page.nextCursor);
-      } catch {
-        toast.error(ERROR_MESSAGE);
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    // Browsers with native scroll anchoring (not Safari) already keep the page in place.
+    const nativeAnchoring = typeof CSS !== "undefined" && CSS.supports("overflow-anchor", "auto");
+    if (heightBefore.current !== null && list && !nativeAnchoring) {
+      const delta = list.offsetHeight - heightBefore.current;
+      if (delta !== 0) window.scrollBy(0, delta);
+    }
+    heightBefore.current = null;
+  }, [state.trips]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || done || error) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) void loadPage();
+      },
+      { rootMargin: "0px 0px 400px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [done, error, loadPage]);
+
+  async function refresh() {
+    const startGen = state.gen;
+    setRefreshing(true);
+    try {
+      const res = await clientFetch<{ trips: FeedTrip[]; now: string }>(
+        `/api/feed/since?${feedQuery({ since: state.since, city })}`,
+      );
+      if (!res.ok) throw new Error(res.error);
+      if (startGen !== currentGen.current) return; // the filter changed while refreshing
+      const known = new Set(state.trips.map((t) => t.id));
+      const added = res.trips.filter((t) => !known.has(t.id));
+      dispatch({ type: "refreshed", gen: startGen, trips: res.trips, now: res.now });
+      if (added.length === 0) {
+        toast.info("You are up to date");
+        return;
       }
-    });
+      setNewIds((prev) => new Set([...prev, ...added.map((t) => t.id)]));
+      toast.success(`${added.length} new ${added.length === 1 ? "trip" : "trips"}`);
+    } catch {
+      toast.error(ERROR_MESSAGE);
+    } finally {
+      setRefreshing(false);
+    }
   }
 
-  const cityItems = [{ value: ALL, label: "All cities" }, ...cities.map((c) => ({ value: c, label: c }))];
+  function changeCity(value: string | null) {
+    setNewIds(new Set());
+    dispatch({ type: "reset", city: value && value !== ALL ? value : undefined });
+  }
+
+  const cityItems = [{ value: ALL, label: "All cities" }, ...cityList.map((c) => ({ value: c, label: c }))];
+  const empty = state.trips.length === 0 && done && !error;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Select items={cityItems} value={city ?? ALL} onValueChange={(v) => setParam("city", v && v !== ALL ? v : null)}>
-          <SelectTrigger className="w-48" aria-label="Filter by destination">
+        <Select items={cityItems} value={city ?? ALL} onValueChange={changeCity}>
+          <SelectTrigger
+            className="w-48 max-w-full border-white/15 bg-white/10 text-white backdrop-blur-md"
+            aria-label="Filter by destination"
+          >
             <Filter className="size-4" />
             <SelectValue />
           </SelectTrigger>
@@ -117,44 +179,51 @@ export function FeedClient({
           </SelectContent>
         </Select>
 
-        <Select items={SORT_ITEMS} value={sort} onValueChange={(v) => setParam("sort", v === "desc" ? "desc" : null)}>
-          <SelectTrigger className="w-80 max-w-full" aria-label="Sort by departure date">
-            <ArrowDownUp className="size-4" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_ITEMS.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
-                {s.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" onClick={refresh} disabled={refreshing} className="ml-auto">
+        <Button variant="outline" onClick={refresh} disabled={refreshing} className="ml-auto border-white/15 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white">
           <RefreshCw className={refreshing ? "animate-spin" : ""} /> Refresh
         </Button>
       </div>
 
-      {trips.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-card p-10 text-center text-muted-foreground">
+      {empty && (
+        <div className="rounded-2xl border border-dashed border-orange-400/40 bg-slate-900/60 p-10 text-center text-muted-foreground backdrop-blur-md">
+          <MapPinned className="mx-auto mb-3 size-8 text-orange-400" />
           No active trips{city ? ` for ${city}` : ""} right now.
         </div>
-      ) : (
-        <div className="space-y-4">
-          {trips.map((t) => (
-            <FeedTripCard key={t.id} trip={t} isNew={newIds.has(t.id)} />
+      )}
+
+      {state.trips.length > 0 && (
+        <div ref={listRef} className="space-y-4">
+          {state.trips.map((t) => (
+            <FeedTripCard
+              key={t.id}
+              trip={t}
+              isNew={newIds.has(t.id)}
+              action={<JoinAction trip={t} onPatched={(patch) => dispatch({ type: "tripPatched", id: t.id, patch })} />}
+            />
           ))}
         </div>
       )}
 
-      {cursor && (
-        <div className="flex justify-center">
-          <Button variant="outline" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? "Loading…" : "See more trips"}
+      {/* Never let the browser anchor on the loader or the sentinel: it would push new cards above the viewport. */}
+      <div aria-live="polite" className="min-h-6 text-center text-sm text-muted-foreground [overflow-anchor:none]">
+        {loading && (
+          <span className="inline-flex items-center gap-2">
+            <Loader2 className="size-4 animate-spin text-teal-300" /> Loading more trips…
+          </span>
+        )}
+        {done && state.trips.length > 0 && !loading && "You have seen all the trips. Check back soon for new ones!"}
+      </div>
+
+      {error && (
+        <div role="alert" className="flex flex-col items-center gap-3 rounded-2xl border border-orange-400/40 bg-slate-900/60 p-6 text-center backdrop-blur-md">
+          <p className="text-sm text-muted-foreground">{ERROR_MESSAGE}</p>
+          <Button onClick={() => void loadPage()} disabled={loading}>
+            Retry
           </Button>
         </div>
       )}
+
+      <div ref={done ? undefined : sentinelRef} aria-hidden className="h-px [overflow-anchor:none]" />
     </div>
   );
 }

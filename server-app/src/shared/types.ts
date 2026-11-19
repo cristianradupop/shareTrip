@@ -1,7 +1,8 @@
 // JSON-safe types shared by server-app (producer) and server-admin (consumer).
 // Keep this file free of `@/` imports: server-admin type-checks it with its own alias.
 
-export type FeedSort = "asc" | "desc";
+/** What the signed-in viewer can do with a feed trip. */
+export type JoinState = "join" | "requested" | "declined" | "joined" | "full" | "wrong_gender";
 
 export type FeedTrip = {
   id: string;
@@ -15,10 +16,13 @@ export type FeedTrip = {
   gender: string;
   theme: string;
   maxTravelers: number;
+  status: "active" | "full";
   createdAt: string;
   joined: number;
   organizerName: string;
   organizerImage: string | null;
+  /** Only present when the request has a session. */
+  viewerState?: JoinState;
 };
 
 export type OrganizerTrip = {
@@ -37,12 +41,14 @@ export type OrganizerTrip = {
   status: string;
   createdAt: string;
   joined: number;
+  pending: number;
 };
 
 export type OrganizerStats = {
   trips: number;
   participants: number;
   upcoming: number;
+  pendingRequests: number;
 };
 
 export type AdminUserRow = {
@@ -54,6 +60,7 @@ export type AdminUserRow = {
   phone: string;
   address: string;
   birthDate: string;
+  gender: "male" | "female" | null;
   role: "user" | "admin";
   banned: boolean;
   image: string | null;
@@ -69,6 +76,7 @@ export type SessionUser = {
   phone: string;
   address: string;
   birthDate: string;
+  gender: "male" | "female" | null;
   image: string | null;
   role: "user" | "admin";
 };

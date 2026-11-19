@@ -31,6 +31,7 @@ export const user = pgTable("user", {
   phone: text("phone").notNull(),
   address: text("address").notNull(),
   birthDate: text("birth_date").notNull(),
+  gender: text("gender"),
 });
 
 export const session = pgTable(

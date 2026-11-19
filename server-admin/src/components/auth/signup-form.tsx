@@ -5,10 +5,12 @@ import { CheckCircle2, ImagePlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { safeNext } from "@/lib/safe-next";
 import { PHOTO_MAX_BYTES, signUpSchema, type SignUpInput } from "server-app/shared";
 import { clientFetch } from "@/lib/client-api";
 
@@ -23,7 +25,12 @@ const FIELDS: { name: keyof SignUpInput; label: string; type?: string; autoCompl
   { name: "address", label: "Home address", autoComplete: "street-address" },
 ];
 
-export function SignUpForm() {
+const GENDERS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
+
+export function SignUpForm({ next }: { next?: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -35,6 +42,7 @@ export function SignUpForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isValid, touchedFields, isSubmitting },
   } = useForm<SignUpInput>({
@@ -77,7 +85,7 @@ export function SignUpForm() {
     // Do not refresh here: /signup redirects logged-in users, which would hide the success message.
     setCreated(true);
     setTimeout(() => {
-      router.push("/");
+      router.push(safeNext(next) ?? "/");
       router.refresh();
     }, 2200);
   }
@@ -121,6 +129,31 @@ export function SignUpForm() {
             </FormField>
           );
         })}
+        <FormField label="Gender" htmlFor="gender" error={errors.gender?.message} invalid={showInvalid("gender")}>
+          <Controller
+            control={control}
+            name="gender"
+            render={({ field: f }) => (
+              <Select
+                items={GENDERS}
+                value={f.value ?? null}
+                onValueChange={(v) => f.onChange(v ?? undefined)}
+                onOpenChange={(open) => !open && f.onBlur()}
+              >
+                <SelectTrigger id="gender" className="w-full" aria-invalid={showInvalid("gender")}>
+                  <SelectValue placeholder="Choose your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  {GENDERS.map((g) => (
+                    <SelectItem key={g.value} value={g.value}>
+                      {g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </FormField>
       </div>
 
       <div className="space-y-1.5">

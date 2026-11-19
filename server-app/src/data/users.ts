@@ -39,6 +39,7 @@ export async function listUsers(opts: { q?: string; page: number; sort?: "newest
     phone: u.phone,
     address: u.address,
     birthDate: u.birthDate,
+    gender: u.gender === "male" || u.gender === "female" ? u.gender : null,
     role: u.role === "admin" ? "admin" : "user",
     banned: Boolean(u.banned),
     image: u.image,
