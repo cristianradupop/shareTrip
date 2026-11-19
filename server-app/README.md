@@ -36,9 +36,9 @@ Auth: public = no session needed, user = any signed-in account, admin = role `ad
 |---|---|---|---|---|
 | GET | `/` | public | none | `{ name: "server-app", status: "ok" }` |
 | GET | `/api/health` | public | none | `{ status: "ok" }` |
-| GET, POST | `/api/auth/[...all]` | public (Better Auth decides) | Better Auth routes (sign-in, sign-out, ...); DB rate limited | Better Auth responses |
+| GET, POST | `/api/auth/[...all]` | public (Better Auth decides) | Better Auth routes (sign-in, sign-out, get-session; its own sign-up path is disabled, use `/api/signup`); DB rate limited | Better Auth responses |
 | GET | `/api/session` | public | none (reads the cookie) | `{ user: SessionUser \| null }`, `Cache-Control: private, no-store` |
-| POST | `/api/signup` | public | multipart: `username`, `password`, `firstName`, `lastName`, `email`, `phone`, `address`, `birthDate`, `photo` (JPG/PNG, max 2 MB) | `{ ok: true }` and the session cookie; 400 invalid data or photo, 409 username or email taken |
+| POST | `/api/signup` | public | multipart: `username`, `password`, `firstName`, `lastName`, `email`, `phone`, `address`, `birthDate`, `photo` (JPG/PNG, max 2 MB) | `{ ok: true }` and the session cookie; 400 invalid data or photo, 409 username or email taken, 429 with `Retry-After` after 10 attempts per IP per hour (every attempt counts) |
 | GET | `/api/feed` | public, optional session (a signed-in user's own trips are excluded) | query `city`, `cursor` (newest first, pages of 20) | `{ trips: FeedTrip[], nextCursor: string \| null, now: string }`; with a session each trip has `viewerState` (`join`, `requested`, `declined`, `joined`, `full`, `wrong_gender`); 400 on a bad `cursor` or `city` |
 | GET | `/api/feed/since` | public, optional session (own trips excluded) | query `since` (ISO date, required), `city` | `{ trips: FeedTrip[], now: string }`; 400 on a bad `since` or `city` |
 | GET | `/api/feed/cities` | public, optional session (own trips excluded) | none | `{ cities: string[] }` |
@@ -76,5 +76,5 @@ The response types (`FeedTrip`, `OrganizerTrip`, `OrganizerStats`, `AdminUserRow
 - `nextCookies()` stays last in the Better Auth plugins list, so `/api/signup` can set the session cookie.
 - Rate limiting is stored in the database (in-memory does not work on serverless).
 - `src/db/client.ts` uses the transaction pooler with `prepare: false` and `max_pipeline: 1`; removing either makes concurrent queries hang.
-- The profile photo requirement is enforced in the Better Auth `databaseHooks.user.create.before` hook, not only in the signup handler.
+- The profile photo requirement is enforced in the Better Auth `databaseHooks.user.create.before` hook, as a second defence behind the signup handler (Better Auth's public sign-up path is not allowlisted, so it returns 404).
 - Migrations must be backward compatible (add first, remove in a later release), because deploy and migration start together.

@@ -1,6 +1,7 @@
 import { APIError } from "better-auth/api";
 import { auth } from "@/lib/auth";
 import { checkSameOrigin, jsonError } from "@/lib/api-auth";
+import { SIGNUP_LIMIT_MESSAGE, consumeSignupAttempt } from "@/lib/signup-limit";
 import { deleteProfilePhoto, uploadProfilePhoto } from "@/lib/storage";
 import { signUpSchema } from "@/lib/validators";
 
@@ -10,6 +11,14 @@ const FIELDS = ["username", "password", "firstName", "lastName", "email", "phone
 export async function POST(req: Request) {
   const crossOrigin = checkSameOrigin(req);
   if (crossOrigin) return crossOrigin;
+  // Every attempt counts, also invalid ones, and before the body or the photo is touched.
+  const verdict = await consumeSignupAttempt(req);
+  if (!verdict.allowed) {
+    return Response.json(
+      { ok: false, error: SIGNUP_LIMIT_MESSAGE },
+      { status: 429, headers: { "Retry-After": String(verdict.retryAfterSeconds) } },
+    );
+  }
   let formData: FormData;
   try {
     formData = await req.formData();
