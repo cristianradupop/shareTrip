@@ -4,10 +4,15 @@ import { adminSession, ctx, reset, send, signUpEmail, state, userSession } from 
 
 const upload = vi.hoisted(() => vi.fn(async () => ({ ok: true as const, url: "https://x.test/p.jpg" })));
 const createUser = vi.hoisted(() => vi.fn(async () => undefined));
+const consumeLimit = vi.hoisted(() => vi.fn(async () => ({ allowed: true as const })));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/db/client", async () => (await import("../helpers")).dbModule());
 vi.mock("@/lib/auth", async () => (await import("../helpers")).authModule());
+vi.mock("@/lib/signup-limit", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/signup-limit")>()),
+  consumeSignupAttempt: consumeLimit,
+}));
 vi.mock("@/lib/storage", () => ({ uploadProfilePhoto: upload, deleteProfilePhoto: vi.fn(async () => undefined) }));
 vi.mock("@/lib/user-service", () => ({ createCredentialUser: createUser }));
 
@@ -203,6 +208,7 @@ beforeEach(() => {
   reset();
   upload.mockClear();
   createUser.mockClear();
+  consumeLimit.mockClear();
   for (const fn of Object.values(reqs)) fn.mockReset();
   reqs.loadJoinContext.mockResolvedValue(joinCtx());
   reqs.createJoinRequest.mockResolvedValue({ ok: true });
@@ -236,6 +242,7 @@ describe("same-origin check on mutating handlers", () => {
     expect(upload).not.toHaveBeenCalled();
     expect(signUpEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
+    expect(consumeLimit).not.toHaveBeenCalled();
     for (const name of ["createJoinRequest", "withdrawRequest", "leaveTrip", "approveRequest", "declineRequest"] as const) {
       expect(reqs[name]).not.toHaveBeenCalled();
     }

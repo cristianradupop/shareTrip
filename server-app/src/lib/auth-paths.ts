@@ -5,7 +5,6 @@ const ALLOWED_AUTH_PATHS = new Set([
   "/sign-in/username",
   "/sign-out",
   "/get-session",
-  "/sign-up/email",
 ]);
 
 export function isAllowedAuthPath(pathname: string): boolean {

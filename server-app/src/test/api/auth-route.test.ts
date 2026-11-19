@@ -21,7 +21,7 @@ beforeEach(() => {
 });
 
 describe("/api/auth/[...all] allowlist", () => {
-  it.each(["/update-user", "/change-password", "/admin/set-role", "/admin/ban-user", "/sign-in/email/", "/nope"])(
+  it.each(["/sign-up/email", "/update-user", "/change-password", "/admin/set-role", "/admin/ban-user", "/sign-in/email/", "/nope"])(
     "POST %s returns 404 and never reaches Better Auth",
     async (path) => {
       const res = await call("POST", path);
@@ -35,7 +35,7 @@ describe("/api/auth/[...all] allowlist", () => {
     expect(ba.GET).not.toHaveBeenCalled();
   });
 
-  it.each(["/sign-in/email", "/sign-in/username", "/sign-out", "/sign-up/email"])("POST %s passes through", async (path) => {
+  it.each(["/sign-in/email", "/sign-in/username", "/sign-out"])("POST %s passes through", async (path) => {
     const res = await call("POST", path);
     expect(res.status).toBe(200);
     expect(ba.POST).toHaveBeenCalledTimes(1);

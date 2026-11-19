@@ -6,6 +6,7 @@ import { admin, username } from "better-auth/plugins";
 import { db } from "@/db/client";
 import * as schema from "@/db/schema";
 import { accountSubject, buildEvent, recordEvent } from "@/lib/audit";
+import { IP_ADDRESS_OPTIONS } from "@/lib/client-ip";
 import { ACCOUNT_GENDERS } from "@/lib/validators";
 
 const isAccountGender = (g: unknown) => (ACCOUNT_GENDERS as readonly unknown[]).includes(g);
@@ -34,7 +35,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        // The public sign-up endpoint can be called directly, so enforce the "photo required" rule here too.
+        // Second defence: Better Auth's own sign-up path is disabled, but enforce the "photo required" rule here too.
         before: async (newUser) => {
           const prefix = `${process.env.SUPABASE_URL}/storage/v1/object/public/${process.env.SUPABASE_PHOTOS_BUCKET || "profile-photos"}/`;
           if (!newUser.image || !newUser.image.startsWith(prefix)) {
@@ -68,6 +69,10 @@ export const auth = betterAuth({
   },
   // In-memory rate limiting does not work on serverless, so store it in the DB.
   rateLimit: { storage: "database" },
+  // Measured 2026-11-19: behind the server-admin -> server-app Vercel rewrite, server-app gets one x-forwarded-for
+  // entry, the real client IP (Vercel overwrites a client-sent X-Forwarded-For). Caveat: a multi-entry header
+  // (e.g. an extra proxy in front) makes Better Auth fall back to one shared bucket; then set trustedProxies.
+  advanced: { ipAddress: IP_ADDRESS_OPTIONS },
   // nextCookies() must stay last so Server Actions can set cookies.
   plugins: [username(), admin(), nextCookies()],
 });

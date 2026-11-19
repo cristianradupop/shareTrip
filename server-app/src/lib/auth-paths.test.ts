@@ -3,11 +3,12 @@ import { isAllowedAuthPath } from "./auth-paths";
 
 // Paths are relative to /api/auth (what Better Auth sees), e.g. "/sign-in/email".
 describe("isAllowedAuthPath", () => {
-  it.each(["/sign-in/email", "/sign-in/username", "/sign-out", "/get-session", "/sign-up/email"])("allows %s", (p) => {
+  it.each(["/sign-in/email", "/sign-in/username", "/sign-out", "/get-session"])("allows %s", (p) => {
     expect(isAllowedAuthPath(p)).toBe(true);
   });
 
   it.each([
+    "/sign-up/email",
     "/update-user",
     "/change-password",
     "/change-email",
