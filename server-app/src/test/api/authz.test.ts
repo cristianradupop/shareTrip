@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { user as userTable } from "@/db/schema";
+import { trips as tripsTable, user as userTable } from "@/db/schema";
 import { adminSession, ctx, get, reset, send, state, userSession } from "../helpers";
 
 vi.mock("server-only", () => ({}));
@@ -14,6 +14,9 @@ const orgStats = await import("../../app/api/organizer/stats/route");
 const adminUsers = await import("../../app/api/admin/users/route");
 const adminUser = await import("../../app/api/admin/users/[id]/route");
 const adminBan = await import("../../app/api/admin/users/[id]/ban/route");
+const adminStats = await import("../../app/api/admin/stats/route");
+const adminTrips = await import("../../app/api/admin/trips/route");
+const adminEvents = await import("../../app/api/admin/events/route");
 const profile = await import("../../app/api/profile/route");
 const tripRequest = await import("../../app/api/trips/[id]/request/route");
 const tripMembership = await import("../../app/api/trips/[id]/membership/route");
@@ -97,6 +100,12 @@ const adminEndpoints: Endpoint[] = [
     name: "POST /api/admin/users/[id]/ban",
     call: () => (adminBan.POST as Handler)(send("POST", "/api/admin/users/u2/ban", { banned: true }), ctx("u2")),
   },
+  { name: "GET /api/admin/stats", call: () => (adminStats.GET as Handler)(get("/api/admin/stats")) },
+  { name: "GET /api/admin/trips", call: () => (adminTrips.GET as Handler)(get("/api/admin/trips?page=1")) },
+  {
+    name: "GET /api/admin/events?view=account",
+    call: () => (adminEvents.GET as Handler)(get("/api/admin/events?view=account")),
+  },
 ];
 
 beforeEach(reset);
@@ -176,9 +185,11 @@ describe("POST /api/trips", () => {
     state.session = userSession("real-user");
     const res = await (trips.POST as Handler)(send("POST", "/api/trips", { ...validTrip(), organizerId: "evil" }));
     expect(res.ok).toBe(true);
-    expect(state.inserts).toHaveLength(1);
-    expect(state.inserts[0].values).toMatchObject({ organizerId: "real-user" });
-    expect(JSON.stringify(state.inserts[0].values)).not.toContain("evil");
+    // The audit event is inserted too, so look at the trips insert only.
+    const tripInserts = state.inserts.filter((i) => i.table === tripsTable);
+    expect(tripInserts).toHaveLength(1);
+    expect(tripInserts[0].values).toMatchObject({ organizerId: "real-user" });
+    expect(JSON.stringify(tripInserts[0].values)).not.toContain("evil");
   });
 
   it("returns 400 with the validation message for invalid trip data", async () => {

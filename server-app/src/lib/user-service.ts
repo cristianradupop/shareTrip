@@ -4,6 +4,7 @@
 import { db } from "@/db/client";
 import { account, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
+import { accountSubject, buildEvent, recordEvent } from "@/lib/audit";
 
 export type NewUserData = {
   email: string;
@@ -19,7 +20,11 @@ export type NewUserData = {
   image?: string | null;
 };
 
-export async function createCredentialUser(u: NewUserData): Promise<string> {
+/** Pass `actor` (the admin creating the account) to log an account.created event; seed scripts don't. */
+export async function createCredentialUser(
+  u: NewUserData,
+  opts?: { actor?: { id: string; name: string } },
+): Promise<string> {
   const ctx = await auth.$context;
   const id = crypto.randomUUID();
   const passwordHash = await ctx.password.hash(u.password);
@@ -48,6 +53,10 @@ export async function createCredentialUser(u: NewUserData): Promise<string> {
       userId: id,
       password: passwordHash,
     });
+    if (opts?.actor) {
+      const subject = accountSubject({ id, name: `${u.firstName} ${u.lastName}`, email: u.email.toLowerCase() });
+      await recordEvent(tx, buildEvent("account.created", { ...opts.actor, role: "admin" }, subject));
+    }
   });
   return id;
 }

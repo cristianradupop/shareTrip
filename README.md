@@ -18,6 +18,7 @@ cp server-app/.env.example server-app/.env.local   # then fill it in (see commen
 cp server-admin/.env.example server-admin/.env.local   # only SERVER_APP_URL, default http://localhost:3001
 pnpm db:migrate                   # create tables in Supabase
 pnpm db:backfill-gender           # random gender for accounts that have none; run once after migration 0001
+pnpm db:backfill-audit            # creation events for existing accounts and trips; run once after migration 0002
 pnpm db:setup-storage             # public bucket for profile photos
 pnpm db:seed-admin                # first administrator (ADMIN_* in server-app/.env.local, password >= 10 chars)
 pnpm db:seed-demo                 # fictional users + trips for the demo

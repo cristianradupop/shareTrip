@@ -21,7 +21,15 @@ test("signup page renders", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Create an account" })).toBeVisible();
 });
 
-for (const path of ["/admin", "/organizer"]) {
+for (const path of [
+  "/admin",
+  "/organizer",
+  "/admin/statistics",
+  "/admin/trips",
+  "/admin/activity",
+  "/admin/account-history",
+  "/admin/audit-log",
+]) {
   test(`${path} without a session redirects to /login with a return path`, async ({ page }) => {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login\?next=/);

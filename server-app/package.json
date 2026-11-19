@@ -21,7 +21,8 @@
     "db:seed-admin": "tsx --env-file=.env.local scripts/seed-admin.ts",
     "db:seed-demo": "tsx --env-file=.env.local scripts/seed-demo.ts",
     "db:setup-storage": "tsx --env-file=.env.local scripts/setup-storage.ts",
-    "db:backfill-gender": "tsx --env-file=.env.local scripts/backfill-gender.ts"
+    "db:backfill-gender": "tsx --env-file=.env.local scripts/backfill-gender.ts",
+    "db:backfill-audit": "tsx --env-file=.env.local scripts/backfill-audit.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "1.7.25",

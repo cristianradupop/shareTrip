@@ -29,6 +29,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return jsonError(`${trip.joined} travelers already joined, so max travelers cannot be lower than ${trip.joined}`, 400);
   }
 
-  if (!(await updateOrganizerTrip(id, guard.user.id, t))) return jsonError("Trip not found", 404);
+  const actor = { id: guard.user.id, name: guard.user.name, role: "user" as const };
+  if (!(await updateOrganizerTrip(id, guard.user.id, t, actor))) return jsonError("Trip not found", 404);
   return Response.json({ ok: true });
 }

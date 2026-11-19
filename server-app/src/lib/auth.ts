@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { admin, username } from "better-auth/plugins";
 import { db } from "@/db/client";
 import * as schema from "@/db/schema";
+import { accountSubject, buildEvent, recordEvent } from "@/lib/audit";
 import { ACCOUNT_GENDERS } from "@/lib/validators";
 
 const isAccountGender = (g: unknown) => (ACCOUNT_GENDERS as readonly unknown[]).includes(g);
@@ -43,6 +44,16 @@ export const auth = betterAuth({
             throw new APIError("BAD_REQUEST", { message: "Choose your gender" });
           }
           return { data: newUser };
+        },
+        // Better Auth creates the user, so the sign-up event is written here (after its own transaction).
+        // A logging failure must never fail the sign-up, and the log line carries no personal data.
+        after: async (created) => {
+          try {
+            const actor = { id: created.id, name: created.name, role: "holder" as const };
+            await recordEvent(db, buildEvent("account.created", actor, accountSubject(created)));
+          } catch {
+            console.error("audit: could not record the sign-up event");
+          }
         },
       },
       update: {

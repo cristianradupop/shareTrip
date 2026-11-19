@@ -15,6 +15,13 @@
       "when": 1795108455756,
       "tag": "0001_slow_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795111163731,
+      "tag": "0002_acoustic_gamma_corps",
+      "breakpoints": true
     }
   ]
 }

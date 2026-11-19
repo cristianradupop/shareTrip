@@ -26,6 +26,7 @@ Two to four options each. If nothing needs asking, return `No questions.`
 - Respect recorded decisions (accepted ADRs, CLAUDE.md conventions). If the spec conflicts with one, say so instead of planning around it.
 - Apply the learnings: under Risks and assumptions, name each rule in `docs/learnings.md` that applies to this change and how the plan respects it, or write "Learnings: none apply".
 - Name the coupling: what else must change when this changes (types, serializers, migrations, config, docs, other callers).
+- Name every identifier that more than one task or test file will use (enum and action values, response shapes, exported signatures) in the plan itself, because testers and coders may run in parallel and will otherwise pick different names.
 - When there is a real design choice, weigh 2-3 options with their risks, and pick one.
 - Prefer the smallest change that meets the spec. No speculative abstractions, no unrelated refactors.
 - On large changes, budget your turns: by about 30 tool calls, stop reading and write the plan, marking what you did not verify as unverified.

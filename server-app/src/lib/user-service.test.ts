@@ -18,7 +18,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 const { createCredentialUser } = await import("./user-service");
-const { account, user } = await import("@/db/schema");
+const { account, auditEvents, user } = await import("@/db/schema");
 
 const input = {
   email: "Alex@Demo.Test",
@@ -69,5 +69,28 @@ describe("createCredentialUser", () => {
     await createCredentialUser(input);
     expect(inserts[1].values.password).toBe("hashed:Demo-Pass-123!");
     expect(JSON.stringify(inserts[0].values)).not.toContain("Demo-Pass-123!");
+  });
+
+  it("writes no audit event without an actor (seed scripts)", async () => {
+    await createCredentialUser(input);
+    expect(inserts.some((i) => i.table === auditEvents)).toBe(false);
+  });
+
+  it("writes an account.created event by the admin in the same transaction when an actor is given", async () => {
+    const id = await createCredentialUser(input, { actor: { id: "admin-1", name: "Ada Admin" } });
+    const ev = inserts.filter((i) => i.table === auditEvents).map((i) => i.values);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]).toMatchObject({
+      action: "account.created",
+      actorId: "admin-1",
+      actorRole: "admin",
+      actorName: "Ada Admin",
+      subjectType: "user",
+      subjectId: id,
+      subjectLabel: "Alex Popescu",
+      subjectEmail: "alex@demo.test",
+    });
+    expect(JSON.stringify(ev[0])).not.toContain("Demo-Pass-123!");
+    expect(JSON.stringify(ev[0])).not.toContain("hashed:");
   });
 });
