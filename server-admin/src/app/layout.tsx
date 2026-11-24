@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AnalyticsTracker } from "@/components/analytics/analytics-tracker";
+import { ConsentProvider } from "@/components/consent/consent-provider";
+import { SiteFooter } from "@/components/site-footer";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -28,8 +31,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster richColors position="top-center" />
+          <ConsentProvider>
+            <AnalyticsTracker />
+            {children}
+            <SiteFooter />
+            <Toaster richColors position="top-center" />
+          </ConsentProvider>
         </ThemeProvider>
       </body>
     </html>

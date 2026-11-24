@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { TripFormDialog } from "@/components/trips/trip-form-dialog";
 import { Button } from "@/components/ui/button";
 import type { OrganizerTrip, TripInput } from "server-app/shared";
+import { trackInteraction } from "@/lib/analytics";
 import { clientFetch } from "@/lib/client-api";
 import { toTripFormValues } from "@/lib/trip-form";
 
@@ -18,6 +19,7 @@ export function EditTripButton({ trip }: { trip: OrganizerTrip }) {
   async function onSubmit(values: TripInput) {
     const result = await clientFetch(`/api/trips/${trip.id}`, { method: "PATCH", json: values });
     if (!result.ok) return result.error;
+    trackInteraction("trip_edited");
     toast.success("Trip updated");
     router.refresh();
     return null;

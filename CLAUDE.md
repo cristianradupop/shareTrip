@@ -40,6 +40,8 @@ All secrets live only in `server-app/.env.local`; `server-app/.env.example` list
 
 **Users created outside the sign-up flow:** `server-app/src/lib/user-service.ts` (`createCredentialUser`) inserts user + credential account in one transaction, hashing with Better Auth's own hasher. Used by the admin "create user" endpoint and the seed scripts, so it must not import `server-only`.
 
+**Analytics and consent** (ADR 0006): `server-admin/src/components/consent/consent-provider.tsx` (banner, settings, `useConsent()`) gates `server-admin/src/lib/analytics.ts` + `components/analytics/analytics-tracker.tsx`, which batch events to the public `POST /api/analytics` (consent cookie checked server-side, no raw IP/UA stored, daily-salted IP hash, 30-day opportunistic pruning); `clientFetch` times every call. A new cookie or a new tracked field must also update `/privacy` (`server-admin/src/app/(main)/privacy/page.tsx`). The only cleanup of the shared `rate_limit` table is `pruneAnalytics` (`server-app/src/data/analytics.ts`, rows idle > 24 h, run on ingest), and `/privacy` relies on it: a new limiter keyed by raw IP depends on it too.
+
 **Photos:** `server-app/src/lib/storage.ts` uploads to a public Supabase Storage bucket using the server-only secret key. Type is detected from file signature (JPG/PNG), max 2 MB, generated file names.
 
 **UI:** shadcn/ui on Base UI (not Radix) in `server-admin/src/components/ui`, Tailwind 4 via `@tailwindcss/turbopack` rules in `server-admin/next.config.ts`. `server-app/src/data/{trips,users}.ts` (server-only) is the Drizzle query layer the handlers call. Cache Components is intentionally off.

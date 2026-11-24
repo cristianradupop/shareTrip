@@ -18,7 +18,7 @@ export function useLogout() {
 export function LogoutButton({ className, children }: { className?: string; children?: React.ReactNode }) {
   const logout = useLogout();
   return (
-    <Button variant="ghost" className={className} onClick={logout}>
+    <Button variant="ghost" data-track="user-menu-logout" className={className} onClick={logout}>
       {children ?? (
         <>
           <LogOut className="size-4" /> Logout

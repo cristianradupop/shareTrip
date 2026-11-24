@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { FeedTrip, JoinState } from "server-app/shared";
+import { trackInteraction } from "@/lib/analytics";
 import { clientFetch } from "@/lib/client-api";
 import { formatDateRange, formatMoney, GENDER_LABEL, TRANSPORT_LABEL } from "@/lib/format";
 import { joinActionView } from "@/lib/join-action";
@@ -31,6 +32,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
       return;
     }
     setConfirming(false);
+    if (method === "POST") trackInteraction("join_request_sent");
     toast.success(success);
     onPatched({ viewerState: res.viewerState, joined: res.joined });
   }
@@ -39,7 +41,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
 
   if (view.href) {
     return (
-      <Link href={view.href} className={cn(buttonVariants({ size: "lg" }), ACCENT)}>
+      <Link href={view.href} data-track="join-trip" className={cn(buttonVariants({ size: "lg" }), ACCENT)}>
         {view.label}
       </Link>
     );
@@ -62,6 +64,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
         <Button
           size="lg"
           disabled={view.disabled || (!opensDialog && Boolean(view.secondary))}
+          data-track="join-trip"
           className={opensDialog ? ACCENT : view.secondary ? "bg-teal-600 text-white disabled:opacity-90" : undefined}
           onClick={opensDialog ? () => setConfirming(true) : undefined}
         >
@@ -92,7 +95,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
             <Button variant="outline" disabled={busy} onClick={() => setConfirming(false)}>
               Cancel
             </Button>
-            <Button disabled={busy} className="bg-orange-500 text-white hover:bg-orange-400" onClick={() => void call(requestPath, "POST", "Request sent")}>
+            <Button disabled={busy} data-track="join-send-request" className="bg-orange-500 text-white hover:bg-orange-400" onClick={() => void call(requestPath, "POST", "Request sent")}>
               {busy ? "Sending…" : "Send request"}
             </Button>
           </DialogFooter>
