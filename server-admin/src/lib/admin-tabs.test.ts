@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { ADMIN_TABS, activeAdminTab } from "./admin-tabs";
 
 describe("ADMIN_TABS", () => {
-  it("lists the six tabs in spec order", () => {
+  it("lists the seven tabs in spec order", () => {
     expect(ADMIN_TABS.map((t) => [t.label, t.href])).toEqual([
       ["Statistics", "/admin/statistics"],
+      ["Analytics", "/admin/analytics"],
       ["Accounts", "/admin"],
       ["Trips", "/admin/trips"],
       ["Activity", "/admin/activity"],

@@ -2,6 +2,7 @@ export type AdminTab = { label: string; href: string };
 
 export const ADMIN_TABS: AdminTab[] = [
   { label: "Statistics", href: "/admin/statistics" },
+  { label: "Analytics", href: "/admin/analytics" },
   { label: "Accounts", href: "/admin" },
   { label: "Trips", href: "/admin/trips" },
   { label: "Activity", href: "/admin/activity" },

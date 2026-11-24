@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { TripFormDialog } from "@/components/trips/trip-form-dialog";
 import { Button } from "@/components/ui/button";
 import type { TripFormInput, TripInput } from "server-app/shared";
+import { trackInteraction } from "@/lib/analytics";
 import { clientFetch } from "@/lib/client-api";
 
 const EMPTY = {
@@ -43,6 +44,7 @@ export function CreateTripButton({
   async function onSubmit(values: TripInput) {
     const result = await clientFetch<{ id: string }>("/api/trips", { json: values });
     if (!result.ok) return result.error;
+    trackInteraction("trip_created");
     toast.success("Your trip was created and shared with the community");
     router.refresh();
     return null;
@@ -50,7 +52,7 @@ export function CreateTripButton({
 
   return (
     <>
-      <Button size="lg" className={className ?? "h-11 rounded-full px-6 text-base"} onClick={() => setOpen(true)}>
+      <Button size="lg" data-track="create-trip" className={className ?? "h-11 rounded-full px-6 text-base"} onClick={() => setOpen(true)}>
         {label} <Plus />
       </Button>
 

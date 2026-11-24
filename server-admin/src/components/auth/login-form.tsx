@@ -9,6 +9,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { trackInteraction } from "@/lib/analytics";
 import { safeNext } from "@/lib/safe-next";
 import { loginSchema, type LoginInput } from "server-app/shared";
 
@@ -37,6 +38,7 @@ export function LoginForm({ next }: { next?: string }) {
       setError("Wrong username/email or password");
       return;
     }
+    trackInteraction("login");
     const role = (res.data?.user as { role?: string } | undefined)?.role;
     router.push(target ?? (role === "admin" ? "/admin" : "/"));
     router.refresh();

@@ -10,6 +10,7 @@ import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { trackInteraction } from "@/lib/analytics";
 import { safeNext } from "@/lib/safe-next";
 import { PHOTO_MAX_BYTES, signUpSchema, type SignUpInput } from "server-app/shared";
 import { clientFetch } from "@/lib/client-api";
@@ -83,6 +84,7 @@ export function SignUpForm({ next }: { next?: string }) {
       return;
     }
     // Do not refresh here: /signup redirects logged-in users, which would hide the success message.
+    trackInteraction("signup");
     setCreated(true);
     setTimeout(() => {
       router.push(safeNext(next) ?? "/");

@@ -41,6 +41,7 @@ export async function MainNav() {
               {user.role === "admin" && (
                 <Link
                   href="/admin"
+                  data-track="nav-admin"
                   className={`${buttonVariants({ variant: "ghost", size: "sm" })} rounded-full border border-teal-300/40 bg-teal-400/10 px-4 text-teal-200 hover:bg-teal-400/20 hover:text-teal-100 max-sm:hidden`}
                 >
                   Admin
@@ -55,6 +56,7 @@ export async function MainNav() {
           ) : (
             <Link
               href="/login"
+              data-track="nav-login"
               className={`${buttonVariants({ size: "lg" })} rounded-full bg-gradient-to-r from-orange-500 to-pink-500 px-5 text-white shadow-lg shadow-orange-500/25 hover:from-orange-400 hover:to-pink-400 max-sm:px-4`}
             >
               Login<span className="max-sm:hidden"> / Sign Up</span>

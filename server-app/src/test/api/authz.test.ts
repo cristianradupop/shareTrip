@@ -18,6 +18,7 @@ const adminStats = await import("../../app/api/admin/stats/route");
 const adminTrips = await import("../../app/api/admin/trips/route");
 const adminEvents = await import("../../app/api/admin/events/route");
 const profile = await import("../../app/api/profile/route");
+const adminAnalytics = await import("../../app/api/admin/analytics/route");
 const tripRequest = await import("../../app/api/trips/[id]/request/route");
 const tripMembership = await import("../../app/api/trips/[id]/membership/route");
 const orgRequests = await import("../../app/api/organizer/trips/[id]/requests/route");
@@ -102,6 +103,7 @@ const adminEndpoints: Endpoint[] = [
   },
   { name: "GET /api/admin/stats", call: () => (adminStats.GET as Handler)(get("/api/admin/stats")) },
   { name: "GET /api/admin/trips", call: () => (adminTrips.GET as Handler)(get("/api/admin/trips?page=1")) },
+  { name: "GET /api/admin/analytics", call: () => (adminAnalytics.GET as Handler)(get("/api/admin/analytics?range=7d")) },
   {
     name: "GET /api/admin/events?view=account",
     call: () => (adminEvents.GET as Handler)(get("/api/admin/events?view=account")),
@@ -130,6 +132,15 @@ describe("403 for a non-admin session on admin endpoints", () => {
     expect(state.inserts).toHaveLength(0);
     expect(state.updates).toHaveLength(0);
     expect(state.deletes).toHaveLength(0);
+  });
+});
+
+describe("GET /api/admin/analytics range", () => {
+  it.each(["?range=year", "?range=7D"])("returns 400 for a bad range %j", async (qs) => {
+    state.session = adminSession();
+    const res = await (adminAnalytics.GET as Handler)(get(`/api/admin/analytics${qs}`));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ ok: false, error: expect.any(String) });
   });
 });
 
