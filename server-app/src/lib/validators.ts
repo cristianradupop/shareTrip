@@ -51,6 +51,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // Profile photo rules (checked in the browser for UX and again on the server for safety).
 export const PHOTO_MAX_BYTES = 2 * 1024 * 1024;
 export const PHOTO_TYPES = ["image/jpeg", "image/png"] as const;
+export const TRIP_PHOTO_REQUIRED = "Add a cover photo (JPG or PNG, max 2 MB)";
 
 // ---------- Trips ----------
 
@@ -95,6 +96,18 @@ export const tripSchema = z
     path: ["returnDate"],
     message: "Return must be on or after departure",
   });
+export const TRIP_FIELDS = [
+  "destinationCity",
+  "destinationCountry",
+  "departureDate",
+  "returnDate",
+  "maxTravelers",
+  "gender",
+  "budgetEstimate",
+  "currency",
+  "transport",
+  "theme",
+] as const;
 export type TripFormInput = z.input<typeof tripSchema>;
 export type TripInput = z.output<typeof tripSchema>;
 

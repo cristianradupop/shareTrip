@@ -1,10 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trips as tripsTable, user as userTable } from "@/db/schema";
-import { adminSession, ctx, get, reset, send, state, userSession } from "../helpers";
+import { adminSession, ctx, get, jpgFile, reset, send, sendForm, state, userSession } from "../helpers";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/db/client", async () => (await import("../helpers")).dbModule());
 vi.mock("@/lib/auth", async () => (await import("../helpers")).authModule());
+vi.mock("@/lib/storage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/storage")>()),
+  uploadTripPhoto: vi.fn(async () => ({ ok: true as const, url: "https://x.supabase.co/storage/v1/object/public/b/trips/p.jpg" })),
+  deleteTripPhoto: vi.fn(async () => undefined),
+}));
 
 const session = await import("../../app/api/session/route");
 const trips = await import("../../app/api/trips/route");
@@ -48,12 +53,12 @@ const validTrip = () => {
 
 // The feed endpoints are public reads with an optional session: see feed.test.ts.
 const userEndpoints: Endpoint[] = [
-  { name: "POST /api/trips", call: () => (trips.POST as Handler)(send("POST", "/api/trips", validTrip())) },
+  { name: "POST /api/trips", call: () => (trips.POST as Handler)(sendForm("POST", "/api/trips", validTrip(), jpgFile())) },
   {
     name: "PATCH /api/trips/[id]",
     call: () =>
       (trip.PATCH as Handler)(
-        send("PATCH", "/api/trips/3f2b8a52-6c1d-4e0a-9d6b-0a1b2c3d4e5f", validTrip()),
+        sendForm("PATCH", "/api/trips/3f2b8a52-6c1d-4e0a-9d6b-0a1b2c3d4e5f", validTrip(), jpgFile()),
         ctx("3f2b8a52-6c1d-4e0a-9d6b-0a1b2c3d4e5f"),
       ),
   },
@@ -194,7 +199,7 @@ describe("PATCH /api/profile", () => {
 describe("POST /api/trips", () => {
   it("ignores a body organizerId and uses the session user id", async () => {
     state.session = userSession("real-user");
-    const res = await (trips.POST as Handler)(send("POST", "/api/trips", { ...validTrip(), organizerId: "evil" }));
+    const res = await (trips.POST as Handler)(sendForm("POST", "/api/trips", { ...validTrip(), organizerId: "evil" }, jpgFile()));
     expect(res.ok).toBe(true);
     // The audit event is inserted too, so look at the trips insert only.
     const tripInserts = state.inserts.filter((i) => i.table === tripsTable);
@@ -205,7 +210,7 @@ describe("POST /api/trips", () => {
 
   it("returns 400 with the validation message for invalid trip data", async () => {
     state.session = userSession();
-    const res = await (trips.POST as Handler)(send("POST", "/api/trips", { ...validTrip(), maxTravelers: 1 }));
+    const res = await (trips.POST as Handler)(sendForm("POST", "/api/trips", { ...validTrip(), maxTravelers: 1 }, jpgFile()));
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ ok: false, error: "At least 2 travelers" });
     expect(state.inserts).toHaveLength(0);

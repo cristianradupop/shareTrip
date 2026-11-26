@@ -57,9 +57,16 @@ export async function getOrganizerTripForEdit(id: string, organizerId: string) {
 /**
  * Updates only the form columns and logs trip.edited with the names of the fields that changed, in one transaction.
  * The row is locked first so the diff is against what is really overwritten; no event when nothing changed.
- * Returns false when no editable trip of this organizer matched.
+ * `photoUrl` is only written when given (otherwise the photo is kept) and is logged as "photo".
+ * Returns the photo URL that was replaced, or null when no editable trip of this organizer matched.
  */
-export async function updateOrganizerTrip(id: string, organizerId: string, t: TripInput, actor: Actor): Promise<boolean> {
+export async function updateOrganizerTrip(
+  id: string,
+  organizerId: string,
+  t: TripInput,
+  actor: Actor,
+  photoUrl?: string,
+): Promise<{ previousPhotoUrl: string | null } | null> {
   const values = {
     destinationCity: t.destinationCity,
     destinationCountry: t.destinationCountry,
@@ -71,6 +78,7 @@ export async function updateOrganizerTrip(id: string, organizerId: string, t: Tr
     currency: t.currency,
     transport: t.transport,
     theme: t.theme,
+    ...(photoUrl ? { photoUrl } : {}),
   };
   return db.transaction(async (tx) => {
     const [before] = await tx
@@ -78,15 +86,15 @@ export async function updateOrganizerTrip(id: string, organizerId: string, t: Tr
       .from(trips)
       .where(and(eq(trips.id, id), eq(trips.organizerId, organizerId), ne(trips.status, "cancelled")))
       .for("update");
-    if (!before) return false;
+    if (!before) return null;
 
     await tx.update(trips).set(values).where(eq(trips.id, id));
 
-    const fields = changedFields(before, values);
+    const fields = changedFields(before, values).map((k) => (k === "photoUrl" ? "photo" : k));
     if (fields.length > 0) {
       await recordEvent(tx, buildEvent("trip.edited", actor, tripSubject(before), { changedFields: fields }));
     }
-    return true;
+    return { previousPhotoUrl: before.photoUrl ?? null };
   });
 }
 
@@ -126,6 +134,7 @@ const feedColumns = {
   joined: joinedExpr,
   organizerName: sql<string>`${user.firstName} || ' ' || left(${user.lastName}, 1) || '.'`,
   organizerImage: user.image,
+  photoUrl: trips.photoUrl,
 };
 
 type FeedRow = {
@@ -146,6 +155,7 @@ type FeedRow = {
   joined: number;
   organizerName: string;
   organizerImage: string | null;
+  photoUrl: string | null;
   // Present only when the query was run for a viewer.
   isMember?: boolean;
   requestStatus?: RequestStatus | null;
@@ -180,6 +190,7 @@ export const toFeedTrip = (r: FeedRow, viewer?: FeedViewer): FeedTrip => ({
   joined: r.joined,
   organizerName: r.organizerName,
   organizerImage: r.organizerImage,
+  photoUrl: r.photoUrl,
   ...(viewer && {
     viewerState: viewerJoinState({
       isMember: Boolean(r.isMember),

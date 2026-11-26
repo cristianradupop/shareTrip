@@ -26,6 +26,7 @@ const trip = (o: Record<string, unknown> = {}): FeedTrip =>
     joined: 0,
     organizerName: "Ana P.",
     organizerImage: null,
+    photoUrl: null,
     status: "active",
     ...o,
   }) as FeedTrip;

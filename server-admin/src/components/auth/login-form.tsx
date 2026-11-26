@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormField } from "@/components/form-field";
@@ -14,7 +13,6 @@ import { safeNext } from "@/lib/safe-next";
 import { loginSchema, type LoginInput } from "server-app/shared";
 
 export function LoginForm({ next }: { next?: string }) {
-  const router = useRouter();
   const target = safeNext(next);
   const [error, setError] = useState<string | null>(null);
   const {
@@ -40,8 +38,9 @@ export function LoginForm({ next }: { next?: string }) {
     }
     trackInteraction("login");
     const role = (res.data?.user as { role?: string } | undefined)?.role;
-    router.push(target ?? (role === "admin" ? "/admin" : "/"));
-    router.refresh();
+    // A full page load, not router.push + refresh: the refresh re-rendered /login, which (now signed in)
+    // redirected elsewhere and won the race against the push, so "Organize a trip" landed on the home page.
+    window.location.assign(target ?? (role === "admin" ? "/admin" : "/"));
   }
 
   return (

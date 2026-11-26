@@ -21,6 +21,7 @@ export type FeedTrip = {
   joined: number;
   organizerName: string;
   organizerImage: string | null;
+  photoUrl: string | null;
   /** Only present when the request has a session. */
   viewerState?: JoinState;
 };
@@ -40,6 +41,7 @@ export type OrganizerTrip = {
   maxTravelers: number;
   status: string;
   createdAt: string;
+  photoUrl: string | null;
   joined: number;
   pending: number;
 };

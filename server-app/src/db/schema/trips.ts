@@ -47,6 +47,8 @@ export const trips = pgTable(
     theme: text("theme").notNull(),
     status: tripStatus("status").notNull().default("active"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // Public Supabase Storage URL of the cover photo; null = automatic photo.
+    photoUrl: text("photo_url"),
   },
   (t) => [
     index("trips_departure_idx").on(t.departureDate, t.id),

@@ -14,6 +14,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${serverAppUrl}/api/:path*` }];
   },
+  images: {
+    remotePatterns: [
+      // next/image throws for URLs outside these patterns: a custom SUPABASE_URL domain needs this updated.
+      { protocol: "https", hostname: "*.supabase.co", port: "", pathname: "/storage/v1/object/public/*/trips/**", search: "" },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {

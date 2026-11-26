@@ -18,6 +18,7 @@ const base: FeedTrip = {
   joined: 1,
   organizerName: "Ana P.",
   organizerImage: null,
+  photoUrl: null,
   status: "active",
 };
 const trip = (o: Partial<FeedTrip> = {}): FeedTrip => ({ ...base, ...o });
