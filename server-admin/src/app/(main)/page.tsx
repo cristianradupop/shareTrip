@@ -1,4 +1,4 @@
-import { Mail } from "lucide-react";
+import { Mail, MapPinned } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowBadge } from "@/components/arrow-badge";
@@ -104,7 +104,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
                 href="/joiner"
                 className="group inline-flex h-12 items-center gap-3 rounded-full py-1 pl-6 pr-1.5 text-sm font-semibold text-white ring-1 ring-white/40 backdrop-blur-md transition-colors hover:bg-white/10"
               >
-                Join a trip <ArrowBadge direction="right" tone="light" className="size-9" />
+                <MapPinned className="size-4" /> Join a trip <ArrowBadge direction="right" tone="light" className="size-9" />
               </Link>
             </div>
           </div>
