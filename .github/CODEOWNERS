@@ -1,3 +1,2 @@
-# Whoever is listed must approve changes to these shared or guardrail files.
-* @cristianradupop
+# Review is requested automatically only for changes to CI and repo settings.
 /.github/ @cristianradupop
