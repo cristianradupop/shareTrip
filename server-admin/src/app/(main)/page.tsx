@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarPlus, Compass, Mail, Users } from "lucide-react";
+import { ArrowRight, CalendarPlus, Compass, Mail, MapPinned, Users } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { HeroBackdrop } from "@/components/hero-backdrop";
@@ -60,7 +60,7 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               title="Joiner"
               description="Discover upcoming trips, and join the adventure!"
               cta="Continue as Joiner"
-              icon={<Users className="size-10" />}
+              icon={<MapPinned className="size-10" />}
               tone="teal"
             />
           </div>
