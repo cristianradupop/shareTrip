@@ -3,12 +3,12 @@ import type { FeedTrip } from "server-app/shared";
 export type TransportKey = "plane" | "car" | "bus" | "train" | "ship" | "other";
 
 const GRADIENT: Record<TransportKey, string> = {
-  plane: "from-sky-500 to-teal-500",
-  car: "from-orange-500 to-amber-400",
-  bus: "from-emerald-500 to-teal-400",
-  train: "from-indigo-500 to-sky-400",
-  ship: "from-cyan-600 to-blue-500",
-  other: "from-orange-400 to-teal-500",
+  plane: "from-[oklch(0.2_0.02_17)] to-[oklch(0.42_0.12_19)]",
+  car: "from-[oklch(0.58_0.2_19)] to-[oklch(0.72_0.16_35)]",
+  bus: "from-[oklch(0.3_0.03_286)] to-[oklch(0.52_0.06_286)]",
+  train: "from-[oklch(0.15_0.012_17)] to-[oklch(0.33_0.02_17)]",
+  ship: "from-[oklch(0.45_0.15_19)] to-[oklch(0.64_0.205_19)]",
+  other: "from-[oklch(0.25_0.02_17)] to-[oklch(0.58_0.2_19)]",
 };
 
 function transportKey(transport: string): TransportKey {

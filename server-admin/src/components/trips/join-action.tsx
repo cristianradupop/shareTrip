@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 type Reply = { viewerState: JoinState; joined: number };
 
-const ACCENT = "bg-orange-500 text-white hover:bg-orange-400";
+const ACCENT = "bg-primary text-primary-foreground hover:bg-primary/90";
 const QUIET = "border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-white";
 
 /** The join button of a feed card: request, withdraw and leave. `onPatched` receives the trip fields the server changed. */
@@ -65,7 +65,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
           size="lg"
           disabled={view.disabled || (!opensDialog && Boolean(view.secondary))}
           data-track="join-trip"
-          className={opensDialog ? ACCENT : view.secondary ? "bg-teal-600 text-white disabled:opacity-90" : undefined}
+          className={opensDialog ? ACCENT : view.secondary ? "bg-ink text-ink-foreground disabled:opacity-90" : undefined}
           onClick={opensDialog ? () => setConfirming(true) : undefined}
         >
           {view.label}
@@ -95,7 +95,7 @@ export function JoinAction({ trip, onPatched }: { trip: FeedTrip; onPatched: (pa
             <Button variant="outline" disabled={busy} onClick={() => setConfirming(false)}>
               Cancel
             </Button>
-            <Button disabled={busy} data-track="join-send-request" className="bg-orange-500 text-white hover:bg-orange-400" onClick={() => void call(requestPath, "POST", "Request sent")}>
+            <Button disabled={busy} data-track="join-send-request" className={ACCENT} onClick={() => void call(requestPath, "POST", "Request sent")}>
               {busy ? "Sending…" : "Send request"}
             </Button>
           </DialogFooter>

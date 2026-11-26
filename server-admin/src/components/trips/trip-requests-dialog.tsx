@@ -64,7 +64,7 @@ export function TripRequestsDialog({ trip }: { trip: OrganizerTrip }) {
     <>
       <Button variant="outline" size="sm" onClick={() => onOpenChange(true)}>
         Requests
-        {trip.pending > 0 && <Badge className="ml-1 bg-orange-500 text-white">{trip.pending}</Badge>}
+        {trip.pending > 0 && <Badge className="ml-1 bg-primary text-primary-foreground">{trip.pending}</Badge>}
       </Button>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">

@@ -38,7 +38,7 @@ const cookies = [
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12 text-sm leading-6">
+    <main className="mx-3 mt-3 rounded-[2rem] bg-card px-6 py-12 text-sm leading-6 sm:mx-auto sm:mt-4 sm:w-full sm:max-w-3xl sm:px-12">
       <Link href="/" className="text-muted-foreground underline-offset-4 hover:underline">
         Back to TripTogether
       </Link>

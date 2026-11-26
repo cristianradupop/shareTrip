@@ -27,8 +27,10 @@ function NavList({ onNavigate, pendingRequests = 0 }: { onNavigate?: () => void;
         href="/organizer"
         onClick={onNavigate}
         className={cn(
-          "mb-3 flex items-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground shadow-sm",
-          pathname === "/organizer" ? "ring-2 ring-primary/40" : "opacity-95 hover:opacity-100",
+          "mb-4 flex items-center gap-2 rounded-full px-4 py-3 font-semibold transition-colors",
+          pathname === "/organizer"
+            ? "bg-primary text-primary-foreground"
+            : "bg-white/8 text-sidebar-foreground hover:bg-white/12",
         )}
       >
         <Briefcase className="size-5" /> Organizer
@@ -41,15 +43,15 @@ function NavList({ onNavigate, pendingRequests = 0 }: { onNavigate?: () => void;
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              active && "bg-muted text-foreground",
+              "flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              active && "bg-sidebar-accent text-sidebar-foreground",
             )}
           >
             <Icon className="size-5" /> {label}
             {href === "/organizer/trips" && pendingRequests > 0 && (
               <span
                 aria-label={`${pendingRequests} pending requests`}
-                className="ml-auto rounded-full bg-orange-500 px-2 py-0.5 text-xs font-semibold text-white"
+                className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"
               >
                 {pendingRequests}
               </span>
@@ -59,7 +61,7 @@ function NavList({ onNavigate, pendingRequests = 0 }: { onNavigate?: () => void;
       })}
       <button
         onClick={logout}
-        className="mt-auto flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="mt-auto flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
       >
         <LogOut className="size-5" /> Logout
       </button>
@@ -78,34 +80,34 @@ export function OrganizerShell({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="min-h-screen bg-muted/30 md:flex">
+    <div className="mx-auto w-full max-w-[1920px] md:flex md:gap-4 md:p-4">
       {/* desktop sidebar */}
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col gap-6 border-r bg-card p-5 md:flex">
-        <Logo className="text-primary" href="/" />
+      <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-64 shrink-0 flex-col gap-8 rounded-[2rem] bg-sidebar p-5 text-sidebar-foreground md:flex">
+        <Logo className="px-2 pt-1 [&_span_span]:text-primary" href="/" />
         <NavList pendingRequests={pendingRequests} />
       </aside>
 
       {/* mobile top bar */}
-      <div className="sticky top-0 z-30 border-b bg-card md:hidden">
+      <div className="sticky top-0 z-30 m-3 rounded-[1.5rem] bg-sidebar text-sidebar-foreground md:hidden">
         <div className="flex items-center justify-between px-4 py-3">
-          <Logo className="text-primary" href="/" />
-          <Button variant="ghost" size="icon" aria-label="Menu" onClick={() => setOpen((o) => !o)}>
+          <Logo href="/" />
+          <Button variant="ghost" size="icon" aria-label="Menu" className="rounded-full hover:bg-white/10 hover:text-white" onClick={() => setOpen((o) => !o)}>
             {open ? <X /> : <Menu />}
           </Button>
         </div>
         {open && (
-          <div className="flex flex-col border-t p-4">
+          <div className="flex flex-col border-t border-sidebar-border p-4">
             <NavList onNavigate={() => setOpen(false)} pendingRequests={pendingRequests} />
           </div>
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-end gap-3 px-5 pt-4 md:px-8">
-          <ThemeToggle />
+      <div className="min-w-0 flex-1 md:rounded-[2rem] md:bg-card">
+        <div className="flex items-center justify-end gap-3 px-5 pt-4 md:px-8 md:pt-6">
+          <ThemeToggle className="rounded-full" />
           <UserAvatar name={user.name} image={user.image} className="size-9" />
         </div>
-        <main className="px-5 pb-12 pt-2 md:px-8">{children}</main>
+        <main className="px-4 pb-12 pt-2 md:px-8">{children}</main>
       </div>
     </div>
   );

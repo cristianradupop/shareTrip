@@ -192,7 +192,7 @@ export function SignUpForm({ next }: { next?: string }) {
 
       {/* A disabled button swallows clicks, so the wrapper reveals what is still missing. */}
       <span className="block" onClick={() => !canSubmit && setShowAll(true)}>
-        <Button type="submit" size="lg" className="h-10 w-full" disabled={!canSubmit || isSubmitting} style={canSubmit ? undefined : { pointerEvents: "none" }}>
+        <Button type="submit" size="lg" className="h-12 w-full text-base" disabled={!canSubmit || isSubmitting} style={canSubmit ? undefined : { pointerEvents: "none" }}>
           {isSubmitting ? "Creating account…" : "Create account"}
         </Button>
       </span>

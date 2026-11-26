@@ -1,12 +1,39 @@
-import { ArrowRight, CalendarPlus, Compass, Mail, Users } from "lucide-react";
+import { Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { HeroBackdrop } from "@/components/hero-backdrop";
+import { ArrowBadge } from "@/components/arrow-badge";
 import { MainNav } from "@/components/main-nav";
 import { FeedClient } from "@/components/trips/feed-client";
 import { apiGet } from "@/lib/api";
 import type { FeedTrip } from "server-app/shared";
 import { cn } from "@/lib/utils";
+import bridgePhoto from "../../../public/photos/bridge.jpg";
+import alpsPhoto from "../../../public/photos/alps-clouds.jpg";
+import boatLakePhoto from "../../../public/photos/boat-lake.jpg";
+import heroPhoto from "../../../public/photos/hero.jpg";
+import roadtripPhoto from "../../../public/photos/roadtrip.jpg";
+import tentPhoto from "../../../public/photos/tent.jpg";
+
+const QUOTES = [
+  {
+    text: "The world is a book, and those who do not travel read only one page.",
+    author: "Saint Augustine",
+    photo: boatLakePhoto,
+    alt: "A wooden boat on a turquoise mountain lake",
+  },
+  {
+    text: "It is not the mountain we conquer, but ourselves.",
+    author: "Sir Edmund Hillary",
+    photo: alpsPhoto,
+    alt: "Snowy peaks above a sea of clouds at sunset",
+  },
+  {
+    text: "Not all those who wander are lost.",
+    author: "J.R.R. Tolkien",
+    photo: tentPhoto,
+    alt: "A forest and a lake seen from inside an open tent",
+  },
+];
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const { forbidden } = await searchParams;
@@ -22,70 +49,125 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   if (citiesResult.status === "fulfilled") cities = citiesResult.value.cities;
 
   return (
-    <main className="bg-slate-950">
-      <section id="home" className="relative isolate overflow-hidden text-white">
-        <HeroBackdrop />
-        {/* Fades the photo into the dark trips section below, so there is no hard edge. */}
+    <main className="mx-auto w-full max-w-[1920px] space-y-3 px-3 pt-3 sm:space-y-4 sm:px-4 sm:pt-4">
+      {/* HERO: one big rounded photo card, headline bottom-left, call to action bottom-right. */}
+      <section
+        id="home"
+        className="relative isolate flex min-h-[min(94svh,820px)] scroll-mt-4 flex-col overflow-hidden rounded-[2rem] bg-ink text-white"
+      >
+        <Image
+          src={heroPhoto}
+          alt="Two hikers with backpacks on a mountain trail below snowy peaks"
+          fill
+          priority
+          placeholder="blur"
+          sizes="(max-width: 1920px) 100vw, 1920px"
+          className="-z-20 object-cover object-[60%_50%]"
+        />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-48 bg-gradient-to-b from-transparent to-slate-950"
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/20 to-black/45"
         />
         <MainNav />
 
-        {/* Content height only (not full screen), so the trip feed already peeks in below at the top of the page. */}
-        <div className="mx-auto flex max-w-5xl flex-col items-center px-5 pb-14 pt-28 text-center md:pt-32">
-          {forbidden && (
-            <p className="mb-6 rounded-full bg-red-500/90 px-4 py-2 text-sm font-medium">
-              That page is for administrators only.
+        <div className="mt-auto grid gap-10 px-5 pb-8 pt-24 sm:px-10 sm:pb-12 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-end">
+          <div>
+            {forbidden && (
+              <p className="mb-6 inline-block rounded-full bg-primary px-4 py-2 text-sm font-medium">
+                That page is for administrators only.
+              </p>
+            )}
+            <p className="mb-5 flex flex-wrap gap-x-8 gap-y-1 text-sm text-white/75">
+              <span>Community trips</span>
+              <span>Small groups</span>
+              <span>Organize or join</span>
             </p>
-          )}
+            <h1 className="max-w-[14ch] text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+              Explore. Plan. Travel together.
+            </h1>
+          </div>
 
-          <h1 className="text-4xl font-bold tracking-tight drop-shadow sm:text-5xl md:text-6xl">
-            Explore. Plan. Travel{" "}
-            <span className="font-serif italic text-orange-400">Together.</span>
-          </h1>
-          <p className="mt-5 text-lg text-white/90 sm:text-xl">Choose your role to get started:</p>
-
-          <div className="mt-10 grid w-full gap-6 md:grid-cols-2">
-            <RoleCard
-              href="/organizer"
-              title="Organizer"
-              description="Plan and lead amazing trips, create your own adventures!"
-              cta="Continue as Organizer"
-              icon={<CalendarPlus className="size-10" />}
-              tone="orange"
-            />
-            <RoleCard
-              href="/joiner"
-              title="Joiner"
-              description="Discover upcoming trips, and join the adventure!"
-              cta="Continue as Joiner"
-              icon={<Users className="size-10" />}
-              tone="teal"
-            />
+          <div className="max-w-md lg:justify-self-end">
+            <h2 className="text-2xl font-semibold tracking-tight">Don&apos;t wait for someone to go with</h2>
+            <p className="mt-3 text-white/80">
+              Organize a trip and let travelers find you, or join one that is already planned and meet your crew on
+              the road.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/organizer"
+                className="group inline-flex h-12 items-center gap-3 rounded-full bg-white py-1 pl-6 pr-1.5 text-sm font-semibold text-ink transition-colors hover:bg-white/90"
+              >
+                Organize a trip <ArrowBadge direction="right" className="size-9" />
+              </Link>
+              <Link
+                href="/joiner"
+                className="group inline-flex h-12 items-center gap-3 rounded-full py-1 pl-6 pr-1.5 text-sm font-semibold text-white ring-1 ring-white/40 backdrop-blur-md transition-colors hover:bg-white/10"
+              >
+                Join a trip <ArrowBadge direction="right" tone="light" className="size-9" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Same dark palette as the hero; `dark` switches the theme tokens of everything inside. */}
-      <section id="trips" className="dark relative isolate scroll-mt-8 overflow-x-clip bg-slate-950 text-slate-100">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-24 left-1/2 -z-10 h-80 w-[56rem] max-w-[200%] -translate-x-1/2 rounded-full bg-gradient-to-r from-orange-500/15 via-transparent to-teal-400/15 blur-3xl"
-        />
-        {/* On wide screens the feed sits between two illustrated panels that stay in view while scrolling. */}
-        <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(0,56rem)_minmax(0,1fr)]">
-          <DecorPanel src="/decor/tropic-sunset.svg" side="left" />
-          <div className="mx-auto w-full max-w-4xl px-5 pb-16 pt-2">
-            <div className="mb-8 text-center">
-              <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl border border-orange-400/40 bg-orange-400/10 text-orange-400">
-                <Compass className="size-6" />
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight text-white">
-                Upcoming <span className="font-serif italic text-orange-400">trips</span>
-              </h2>
-              <p className="mt-2 text-slate-300">Find a destination and a crew to share it with.</p>
+      {/* QUOTES: three travel photos, each with a famous line about travel. Decorative, not navigation. */}
+      <section aria-label="Travel quotes" className="grid gap-3 sm:gap-4 md:grid-cols-3">
+        {QUOTES.map((q) => (
+          <figure
+            key={q.author}
+            className="group relative isolate flex min-h-[22rem] flex-col justify-end overflow-hidden rounded-[2rem] p-7 text-white sm:p-8 lg:min-h-[26rem]"
+          >
+            <Image
+              src={q.photo}
+              alt={q.alt}
+              fill
+              placeholder="blur"
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="-z-20 object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105"
+            />
+            <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/35 to-black/5" />
+            <span aria-hidden className="font-serif text-8xl leading-none text-primary">&ldquo;</span>
+            <blockquote className="-mt-6 font-serif text-[1.9rem] leading-[1.12] text-balance sm:text-[2.2rem]">
+              {q.text}
+            </blockquote>
+            <figcaption className="mt-5 flex items-center gap-3 text-xs font-medium uppercase tracking-[0.2em] text-white/75">
+              <span aria-hidden className="h-px w-8 bg-primary" />
+              {q.author}
+            </figcaption>
+          </figure>
+        ))}
+      </section>
+
+      {/* TRIPS: sticky photo panel on wide screens, the live feed beside it. */}
+      <section id="trips" className="scroll-mt-4 rounded-[2rem] bg-card p-5 sm:p-8 lg:p-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:gap-12">
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <p className="text-sm font-medium text-primary">Upcoming</p>
+            <h2 className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Trips looking for travelers</h2>
+            <p className="mt-4 text-muted-foreground">
+              Pick a destination, check the dates and the budget, and ask the organizer for a seat.
+            </p>
+            {cities.length > 0 && (
+              <p className="mt-6 flex items-baseline gap-3">
+                <span className="text-4xl font-semibold text-primary">{cities.length}</span>
+                <span className="text-sm text-muted-foreground">
+                  {cities.length === 1 ? "destination" : "destinations"} on the feed today
+                </span>
+              </p>
+            )}
+            <div className="relative mt-8 hidden aspect-[4/5] overflow-hidden rounded-[1.5rem] lg:block">
+              <Image
+                src={bridgePhoto}
+                alt="A traveler crossing a suspension bridge in a forest at sunrise"
+                fill
+                placeholder="blur"
+                sizes="24rem"
+                className="object-cover"
+              />
             </div>
+          </div>
+          <div className="min-w-0">
             <FeedClient
               initialTrips={feed?.trips ?? []}
               initialCursor={feed?.nextCursor ?? null}
@@ -95,99 +177,81 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
               citiesError={citiesResult.status === "rejected"}
             />
           </div>
-          <DecorPanel src="/decor/tropic-lagoon.svg" side="right" />
         </div>
       </section>
-      {/* About and Contact keep the hero's dark palette too, so the page has no light/dark edge. */}
-      <div className="dark bg-slate-950 text-slate-100">
-        <section id="about" className="mx-auto max-w-6xl scroll-mt-8 px-5 py-20">
-          <h2 className="text-3xl font-bold tracking-tight">About TripTogether</h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">
-            TripTogether is for people who want to travel but have nobody to do it with. Create an account, then
-            organize a trip or join one that another traveler already planned, and meet people who share your
-            interests.
-          </p>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {[
-              { icon: <CalendarPlus className="size-6" />, title: "Organize", text: "Set the destination, dates, budget and group size, then share the trip with the whole community." },
-              { icon: <Compass className="size-6" />, title: "Discover", text: "Browse the latest trips right here on the home page and filter them by destination." },
-              { icon: <Users className="size-6" />, title: "Travel together", text: "Join a trip, chat with the group and turn new acquaintances into travel buddies." },
-            ].map((f) => (
-              <div key={f.title} className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 backdrop-blur-md">
-                <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-orange-400/10 text-orange-400">
-                  {f.icon}
-                </div>
-                <h3 className="text-lg font-semibold">{f.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{f.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
-        <section id="contact" className="scroll-mt-8 border-t border-white/10 bg-slate-900/40">
-          <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 px-5 py-14">
-            <h2 className="text-3xl font-bold tracking-tight">Contact</h2>
-            <p className="text-muted-foreground">Questions about the project? We would love to hear from you.</p>
-            <p className="flex items-center gap-2 font-medium">
-              <Mail className="size-4 text-orange-400" /> contact@triptogether.example
+      {/* ABOUT */}
+      <section id="about" className="scroll-mt-4 rounded-[2rem] bg-card p-5 sm:p-8 lg:p-10">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
+          <div>
+            <h2 className="text-sm font-medium text-primary">About TripTogether</h2>
+            <p className="mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+              For people who want to travel but have nobody to do it with.
             </p>
-            <p className="mt-6 text-xs text-muted-foreground">
-              Demo project (proof of concept). All trips and people shown are fictional.
+            <p className="mt-5 max-w-lg text-muted-foreground">
+              Create an account, then organize a trip or join one that another traveler already planned, and meet
+              people who share your interests.
             </p>
           </div>
-        </section>
-      </div>
-    </main>
-  );
-}
-
-// Decorative illustration beside the feed (wide screens only); it fades out at the top and bottom edges.
-function DecorPanel({ src, side }: { src: string; side: "left" | "right" }) {
-  return (
-    <div aria-hidden className="hidden xl:block">
-      <div
-        className={cn(
-          "sticky top-10 mt-44 h-[min(78vh,46rem)] w-[min(calc(100%-3rem),18rem)] overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl shadow-black/50",
-          "[mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]",
-          side === "left" ? "ml-auto mr-2" : "ml-2 mr-auto",
-        )}
-      >
-        <div className="relative size-full">
-          <Image src={src} alt="" fill unoptimized sizes="18rem" className="object-cover" />
+          <div className="relative min-h-64 overflow-hidden rounded-[1.5rem]">
+            <Image
+              src={roadtripPhoto}
+              alt="A yellow camper van on a desert road between red rocks"
+              fill
+              placeholder="blur"
+              sizes="(max-width: 1024px) 100vw, 55vw"
+              className="object-cover"
+            />
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function RoleCard(props: {
-  href: string;
-  title: string;
-  description: string;
-  cta: string;
-  icon: React.ReactNode;
-  tone: "orange" | "teal";
-}) {
-  const orange = props.tone === "orange";
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-start rounded-3xl border-2 bg-slate-950/45 p-7 text-left shadow-2xl backdrop-blur-md",
-        orange ? "border-orange-400/80" : "border-teal-300/80",
-      )}
-    >
-      <div className={orange ? "text-orange-300" : "text-teal-200"}>{props.icon}</div>
-      <h2 className="mt-4 text-3xl font-semibold">{props.title}</h2>
-      <p className="mt-2 text-base text-white/85">{props.description}</p>
-      <Link
-        href={props.href}
-        className={cn(
-          "mt-6 inline-flex h-12 items-center gap-2 rounded-full px-7 text-base font-semibold text-white transition-transform hover:scale-[1.03]",
-          orange ? "bg-orange-500 hover:bg-orange-400" : "bg-teal-500 hover:bg-teal-400",
-        )}
+        <div className="mt-10 grid gap-3 sm:gap-4 md:grid-cols-3">
+          {[
+            { n: "01", title: "Organize", text: "Set the destination, dates, budget and group size, then share the trip with the whole community." },
+            { n: "02", title: "Discover", text: "Browse the latest trips right here on the home page and filter them by destination." },
+            { n: "03", title: "Travel together", text: "Join a trip, chat with the group and turn new acquaintances into travel buddies." },
+          ].map((f, i) => (
+            <div
+              key={f.title}
+              className={cn(
+                "flex min-h-52 flex-col justify-between rounded-[1.5rem] p-6",
+                i === 1 ? "bg-ink text-ink-foreground" : "bg-muted",
+              )}
+            >
+              <span className={cn("text-sm font-medium", i === 1 ? "text-primary" : "text-primary")}>{f.n}</span>
+              <div>
+                <h3 className="text-xl font-semibold tracking-tight">{f.title}</h3>
+                <p className={cn("mt-2 text-sm", i === 1 ? "text-ink-foreground/70" : "text-muted-foreground")}>
+                  {f.text}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section
+        id="contact"
+        className="flex scroll-mt-4 flex-col gap-6 rounded-[2rem] bg-primary p-7 text-primary-foreground sm:p-10 md:flex-row md:items-end md:justify-between"
       >
-        {props.cta} <ArrowRight className="size-4" />
-      </Link>
-    </div>
+        <div>
+          <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Contact</h2>
+          <p className="mt-3 max-w-md text-primary-foreground/85">
+            Questions about the project? We would love to hear from you.
+          </p>
+          <p className="mt-6 text-xs text-primary-foreground/75">
+            Demo project (proof of concept). All trips and people shown are fictional.
+          </p>
+        </div>
+        <a
+          href="mailto:contact@triptogether.example"
+          className="group inline-flex h-12 items-center gap-3 self-start rounded-full bg-white py-1 pl-6 pr-1.5 text-sm font-semibold text-ink md:self-auto"
+        >
+          <Mail className="size-4 text-primary" /> contact@triptogether.example
+          <ArrowBadge tone="dark" className="size-9" />
+        </a>
+      </section>
+    </main>
   );
 }
