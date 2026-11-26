@@ -21,7 +21,7 @@ export default async function OrganizerDashboard({ searchParams }: PageProps<"/o
     <div className="space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-4 pt-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user.firstName}! 👋</h1>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Welcome back, {user.firstName}! 👋</h1>
           <p className="mt-1 text-muted-foreground">Plan your next adventure.</p>
         </div>
         <CreateTripButton defaultOpen={openNew === "1"} />
@@ -44,7 +44,7 @@ export default async function OrganizerDashboard({ searchParams }: PageProps<"/o
         </div>
 
         {trips.length === 0 ? (
-          <div className="rounded-2xl border border-dashed bg-card p-10 text-center">
+          <div className="rounded-[1.75rem] border border-dashed bg-card p-10 text-center">
             <p className="font-medium">You haven&apos;t organized any trips yet.</p>
             <p className="mt-1 text-sm text-muted-foreground">Create your first trip and share it with the community.</p>
             <div className="mt-5 flex justify-center">
@@ -63,19 +63,21 @@ export default async function OrganizerDashboard({ searchParams }: PageProps<"/o
   );
 }
 
+// Bento tiles: red, ink and white, like the landing page.
 const TONES = {
-  orange: "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400",
-  teal: "bg-teal-100 text-teal-600 dark:bg-teal-950 dark:text-teal-400",
-  amber: "bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400",
+  orange: { tile: "bg-primary text-primary-foreground", icon: "bg-white/15", label: "text-primary-foreground/80" },
+  teal: { tile: "bg-ink text-ink-foreground", icon: "bg-white/10 text-primary", label: "text-ink-foreground/65" },
+  amber: { tile: "bg-card ring-1 ring-border", icon: "bg-primary/10 text-primary", label: "text-muted-foreground" },
 };
 
 function StatCard({ icon, value, label, tone }: { icon: React.ReactNode; value: number; label: string; tone: keyof typeof TONES }) {
+  const t = TONES[tone];
   return (
-    <div className="flex items-center gap-4 rounded-2xl border bg-card p-5 shadow-sm">
-      <div className={`flex size-14 items-center justify-center rounded-xl ${TONES[tone]}`}>{icon}</div>
+    <div className={`flex min-h-40 flex-col justify-between rounded-[1.75rem] p-6 ${t.tile}`}>
+      <div className={`flex size-12 items-center justify-center rounded-full ${t.icon}`}>{icon}</div>
       <div>
-        <p className="text-3xl font-bold leading-none">{value}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{label}</p>
+        <p className="text-4xl font-semibold leading-none tracking-tight">{value}</p>
+        <p className={`mt-2 text-sm ${t.label}`}>{label}</p>
       </div>
     </div>
   );

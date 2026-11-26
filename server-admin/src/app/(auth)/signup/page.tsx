@@ -11,8 +11,8 @@ export default async function SignUpPage({ searchParams }: PageProps<"/signup">)
 
   return (
     <>
-      <h1 className="mb-1 text-center text-2xl font-bold text-primary">Create an account</h1>
-      <p className="mb-6 text-center text-sm text-muted-foreground">Join the community and start traveling together.</p>
+      <h1 className="mb-2 text-4xl font-semibold tracking-tight">Create an account</h1>
+      <p className="mb-8 text-muted-foreground">Join the community and start traveling together.</p>
       <SignUpForm next={typeof next === "string" ? next : undefined} />
     </>
   );

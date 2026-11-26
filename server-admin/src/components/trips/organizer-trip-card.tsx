@@ -8,12 +8,12 @@ import { canEditTrip, type OrganizerTrip } from "server-app/shared";
 
 export function OrganizerTripCard({ trip }: { trip: OrganizerTrip }) {
   return (
-    <article className="overflow-hidden rounded-2xl border bg-card shadow-sm transition-shadow hover:shadow-md">
-      <div className="h-36 overflow-hidden">
-        <TripCover seed={trip.destinationCity} />
+    <article className="group overflow-hidden rounded-[1.75rem] bg-card p-2 ring-1 ring-border transition-shadow hover:shadow-xl hover:shadow-black/5">
+      <div className="relative h-44 overflow-hidden rounded-[1.35rem]">
+        <TripCover seed={trip.destinationCity} className="transition-transform duration-700 group-hover:scale-105" />
       </div>
-      <div className="space-y-1 p-4">
-        <h3 className="font-semibold">
+      <div className="space-y-1 px-3 pb-3 pt-4">
+        <h3 className="text-lg font-semibold tracking-tight">
           {trip.destinationCity}, {trip.destinationCountry}
         </h3>
         <p className="text-sm text-muted-foreground">{formatDateRange(trip.departureDate, trip.returnDate)}</p>

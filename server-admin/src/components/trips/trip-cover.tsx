@@ -1,13 +1,24 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
+import alpsCloudsPhoto from "../../../public/photos/alps-clouds.jpg";
+import balloonsPhoto from "../../../public/photos/balloons.jpg";
+import boatLakePhoto from "../../../public/photos/boat-lake.jpg";
+import bridgePhoto from "../../../public/photos/bridge.jpg";
+import crewPhoto from "../../../public/photos/crew.jpg";
+import desertRoadPhoto from "../../../public/photos/desert-road.jpg";
+import forestPeaksPhoto from "../../../public/photos/forest-peaks.jpg";
+import heroPhoto from "../../../public/photos/hero.jpg";
+import lakePhoto from "../../../public/photos/lake.jpg";
+import oldTownPhoto from "../../../public/photos/old-town.jpg";
+import pierPhoto from "../../../public/photos/pier.jpg";
+import roadtripPhoto from "../../../public/photos/roadtrip.jpg";
+import tentPhoto from "../../../public/photos/tent.jpg";
+import valleyPhoto from "../../../public/photos/valley.jpg";
 
-// Placeholder "photo" for a trip: a mountain landscape whose colors depend on the city name.
-const PALETTES = [
-  ["#fdba74", "#f97316", "#1e3a5f"],
-  ["#99f6e4", "#14b8a6", "#134e4a"],
-  ["#fde68a", "#f59e0b", "#3b2f63"],
-  ["#bae6fd", "#38bdf8", "#1e3a5f"],
-  ["#fecdd3", "#fb7185", "#4c1d4f"],
-  ["#bbf7d0", "#22c55e", "#14532d"],
+// Trips have no photo of their own yet, so each destination gets one of the site's travel photos,
+// always the same one for the same city.
+const PHOTOS = [
+  lakePhoto, alpsCloudsPhoto, roadtripPhoto, bridgePhoto, boatLakePhoto, desertRoadPhoto, valleyPhoto, forestPeaksPhoto, pierPhoto, oldTownPhoto, balloonsPhoto, tentPhoto, crewPhoto, heroPhoto,
 ];
 
 function hash(text: string) {
@@ -16,27 +27,16 @@ function hash(text: string) {
   return h;
 }
 
-export function TripCover({ seed, className }: { seed: string; className?: string }) {
-  const [sky, sun, ground] = PALETTES[hash(seed) % PALETTES.length];
-  const id = `cover-${hash(seed)}`;
+/** Fills its parent, which must be `relative` and sized. */
+export function TripCover({ seed, className, sizes = "(max-width: 640px) 100vw, 400px" }: { seed: string; className?: string; sizes?: string }) {
   return (
-    <svg
-      viewBox="0 0 300 160"
-      preserveAspectRatio="xMidYMid slice"
-      className={cn("h-full w-full", className)}
-      role="img"
-      aria-label={`Illustration for ${seed}`}
-    >
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={sky} />
-          <stop offset="1" stopColor="#ffffff" />
-        </linearGradient>
-      </defs>
-      <rect width="300" height="160" fill={`url(#${id})`} />
-      <circle cx={80 + (hash(seed) % 140)} cy="52" r="20" fill={sun} opacity="0.85" />
-      <path d="M0 120 70 58l45 50 40-36 70 62 75-44v70H0Z" fill={ground} opacity="0.55" />
-      <path d="M0 140 60 96l50 40 55-34 60 48 75-32v42H0Z" fill={ground} />
-    </svg>
+    <Image
+      src={PHOTOS[hash(seed) % PHOTOS.length]}
+      alt={`Travel photo for ${seed}`}
+      fill
+      placeholder="blur"
+      sizes={sizes}
+      className={cn("object-cover", className)}
+    />
   );
 }

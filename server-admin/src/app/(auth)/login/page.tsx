@@ -11,8 +11,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <>
-      <h1 className="mb-1 text-center text-2xl font-bold text-primary">Welcome back</h1>
-      <p className="mb-6 text-center text-sm text-muted-foreground">Log in to organize or join a trip.</p>
+      <h1 className="mb-2 text-4xl font-semibold tracking-tight">Welcome back</h1>
+      <p className="mb-8 text-muted-foreground">Log in to organize or join a trip.</p>
       <LoginForm next={typeof next === "string" ? next : undefined} />
     </>
   );

@@ -164,7 +164,7 @@ export function FeedClient({
       <div className="flex flex-wrap items-center gap-3">
         <Select items={cityItems} value={city ?? ALL} onValueChange={changeCity}>
           <SelectTrigger
-            className="w-48 max-w-full border-white/15 bg-white/10 text-white backdrop-blur-md"
+            className="h-11 w-52 max-w-full rounded-full bg-muted px-4"
             aria-label="Filter by destination"
           >
             <Filter className="size-4" />
@@ -179,14 +179,14 @@ export function FeedClient({
           </SelectContent>
         </Select>
 
-        <Button variant="outline" onClick={refresh} disabled={refreshing} className="ml-auto border-white/15 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 hover:text-white">
+        <Button variant="outline" onClick={refresh} disabled={refreshing} className="ml-auto h-11 rounded-full px-5">
           <RefreshCw className={refreshing ? "animate-spin" : ""} /> Refresh
         </Button>
       </div>
 
       {empty && (
-        <div className="rounded-2xl border border-dashed border-orange-400/40 bg-slate-900/60 p-10 text-center text-muted-foreground backdrop-blur-md">
-          <MapPinned className="mx-auto mb-3 size-8 text-orange-400" />
+        <div className="rounded-[1.5rem] border border-dashed bg-muted/60 p-10 text-center text-muted-foreground">
+          <MapPinned className="mx-auto mb-3 size-8 text-primary" />
           No active trips{city ? ` for ${city}` : ""} right now.
         </div>
       )}
@@ -208,14 +208,14 @@ export function FeedClient({
       <div aria-live="polite" className="min-h-6 text-center text-sm text-muted-foreground [overflow-anchor:none]">
         {loading && (
           <span className="inline-flex items-center gap-2">
-            <Loader2 className="size-4 animate-spin text-teal-300" /> Loading more trips…
+            <Loader2 className="size-4 animate-spin text-primary" /> Loading more trips…
           </span>
         )}
         {done && state.trips.length > 0 && !loading && "You have seen all the trips. Check back soon for new ones!"}
       </div>
 
       {error && (
-        <div role="alert" className="flex flex-col items-center gap-3 rounded-2xl border border-orange-400/40 bg-slate-900/60 p-6 text-center backdrop-blur-md">
+        <div role="alert" className="flex flex-col items-center gap-3 rounded-[1.5rem] bg-muted p-8 text-center">
           <p className="text-sm text-muted-foreground">{ERROR_MESSAGE}</p>
           <Button onClick={() => void loadPage()} disabled={loading}>
             Retry
