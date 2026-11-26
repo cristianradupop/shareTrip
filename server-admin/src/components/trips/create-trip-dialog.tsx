@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { TripFormInput, TripInput } from "server-app/shared";
 import { trackInteraction } from "@/lib/analytics";
 import { clientFetch } from "@/lib/client-api";
+import { toTripFormData } from "@/lib/trip-form";
 
 const EMPTY = {
   destinationCity: "",
@@ -41,8 +42,8 @@ export function CreateTripButton({
     router.replace("/organizer"); // back to the home page of the organizer, dropping ?new=1
   }
 
-  async function onSubmit(values: TripInput) {
-    const result = await clientFetch<{ id: string }>("/api/trips", { json: values });
+  async function onSubmit(values: TripInput, photo: File | null) {
+    const result = await clientFetch<{ id: string }>("/api/trips", { form: toTripFormData(values, photo) });
     if (!result.ok) return result.error;
     trackInteraction("trip_created");
     toast.success("Your trip was created and shared with the community");
@@ -63,6 +64,7 @@ export function CreateTripButton({
         submitLabel="Create"
         pendingLabel="Creating…"
         initialValues={EMPTY}
+        photoRequired
         discard={{
           title: "Trip details",
           description: "Are you sure you want to cancel this trip? Your data for this trip will be lost",

@@ -15,8 +15,7 @@ import roadtripPhoto from "../../../public/photos/roadtrip.jpg";
 import tentPhoto from "../../../public/photos/tent.jpg";
 import valleyPhoto from "../../../public/photos/valley.jpg";
 
-// Trips have no photo of their own yet, so each destination gets one of the site's travel photos,
-// always the same one for the same city.
+// A trip without an uploaded photo gets one of the site's travel photos, always the same one for the same city.
 const PHOTOS = [
   lakePhoto, alpsCloudsPhoto, roadtripPhoto, bridgePhoto, boatLakePhoto, desertRoadPhoto, valleyPhoto, forestPeaksPhoto, pierPhoto, oldTownPhoto, balloonsPhoto, tentPhoto, crewPhoto, heroPhoto,
 ];
@@ -28,7 +27,10 @@ function hash(text: string) {
 }
 
 /** Fills its parent, which must be `relative` and sized. */
-export function TripCover({ seed, className, sizes = "(max-width: 640px) 100vw, 400px" }: { seed: string; className?: string; sizes?: string }) {
+export function TripCover({ seed, photoUrl, className, sizes = "(max-width: 640px) 100vw, 400px" }: { seed: string; photoUrl?: string | null; className?: string; sizes?: string }) {
+  if (photoUrl) {
+    return <Image src={photoUrl} alt={`Photo of the trip to ${seed}`} fill sizes={sizes} className={cn("object-cover", className)} />;
+  }
   return (
     <Image
       src={PHOTOS[hash(seed) % PHOTOS.length]}

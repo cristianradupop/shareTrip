@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auditEvents } from "@/db/schema";
-import { ctx, reset, send, state, type TestSession } from "../helpers";
+import { ctx, jpgFile, reset, sendForm, state, type TestSession } from "../helpers";
 
 // Trip events written by POST /api/trips and PATCH /api/trips/[id] (data layer is real, db is the fake).
 // The fake returns `state.result` for every select/returning, so `state.result = [row]` is both the id the
@@ -10,6 +10,11 @@ import { ctx, reset, send, state, type TestSession } from "../helpers";
 vi.mock("server-only", () => ({}));
 vi.mock("@/db/client", async () => (await import("../helpers")).dbModule());
 vi.mock("@/lib/auth", async () => (await import("../helpers")).authModule());
+vi.mock("@/lib/storage", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/storage")>()),
+  uploadTripPhoto: vi.fn(async () => ({ ok: true as const, url: "https://x.supabase.co/storage/v1/object/public/b/trips/p.jpg" })),
+  deleteTripPhoto: vi.fn(async () => undefined),
+}));
 
 const trips = await import("../../app/api/trips/route");
 const tripById = await import("../../app/api/trips/[id]/route");
@@ -63,7 +68,7 @@ beforeEach(() => {
 });
 
 describe("POST /api/trips event", () => {
-  const create = (b: unknown = body()) => (trips.POST as Handler)(send("POST", "/api/trips", b));
+  const create = (b: unknown = body()) => (trips.POST as Handler)(sendForm("POST", "/api/trips", b as Record<string, unknown>, jpgFile()));
 
   it("logs trip.created with the trip snapshot and the organizer as actor", async () => {
     state.result = [{ id: "trip-9" }];
@@ -95,7 +100,7 @@ describe("POST /api/trips event", () => {
 });
 
 describe("PATCH /api/trips/[id] event", () => {
-  const edit = (b: unknown = body()) => (tripById.PATCH as Handler)(send("PATCH", `/api/trips/${ID}`, b), ctx(ID));
+  const edit = (b: unknown = body()) => (tripById.PATCH as Handler)(sendForm("PATCH", `/api/trips/${ID}`, b as Record<string, unknown>), ctx(ID));
 
   beforeEach(() => {
     state.result = [stored()];

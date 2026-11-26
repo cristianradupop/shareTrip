@@ -101,3 +101,24 @@ export const send = (method: string, path: string, body?: unknown) =>
     headers: { "content-type": "application/json", cookie: "better-auth.session_token=x" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
+const SESSION_COOKIE = "better-auth.session_token=x";
+
+/** A multipart request: string fields plus an optional `photo` file (the browser sets the boundary header). */
+export function sendForm(method: string, path: string, fields: Record<string, unknown>, photo?: File) {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) if (v !== undefined) form.set(k, String(v));
+  if (photo) form.set("photo", photo);
+  return new Request(`http://app.test${path}`, { method, headers: { cookie: SESSION_COOKIE }, body: form });
+}
+
+const fileOf = (head: number[], size: number, name: string, type: string) => {
+  const bytes = new Uint8Array(Math.max(size, head.length));
+  bytes.set(head);
+  return new File([bytes], name, { type });
+};
+
+/** A JPG by signature (ff d8 ff), `size` bytes long (default 1 KB). */
+export const jpgFile = (size = 1024) => fileOf([0xff, 0xd8, 0xff, 0xe0], size, "cover.jpg", "image/jpeg");
+/** A PNG by signature (89 50 4e 47), `size` bytes long (default 1 KB). */
+export const pngFile = (size = 1024) => fileOf([0x89, 0x50, 0x4e, 0x47], size, "cover.png", "image/png");

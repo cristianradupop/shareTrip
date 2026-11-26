@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/db/client", async () => (await import("../test/helpers")).dbModule());
 
 import { state, reset } from "../test/helpers";
-import { getOrganizerStats, toFeedTrip } from "./trips";
+import { getOrganizerStats, toFeedTrip, updateOrganizerTrip } from "./trips";
 
 const ALLOWED_KEYS = [
   "id",
@@ -23,6 +23,7 @@ const ALLOWED_KEYS = [
   "joined",
   "organizerName",
   "organizerImage",
+  "photoUrl",
 ].sort();
 
 const row = {
@@ -43,6 +44,7 @@ const row = {
   joined: 2,
   organizerName: "Ana P.",
   organizerImage: null,
+  photoUrl: null as string | null,
   email: "ana@test.dev",
   organizerId: "user-1",
   // Viewer columns the query selects only when a viewer is given. Assumed row shape:
@@ -106,5 +108,51 @@ describe("getOrganizerStats", () => {
     reset();
     state.result = [];
     expect(await getOrganizerStats("user-1")).toEqual({ trips: 0, participants: 0, upcoming: 0, pendingRequests: 0 });
+  });
+});
+
+describe("toFeedTrip photoUrl", () => {
+  it("passes photoUrl through, null or set", () => {
+    expect(toFeedTrip(row as Row).photoUrl).toBeNull();
+    const url = "https://abc.supabase.co/storage/v1/object/public/b/trips/a.jpg";
+    expect(toFeedTrip({ ...row, photoUrl: url } as Row).photoUrl).toBe(url);
+  });
+});
+
+describe("updateOrganizerTrip", () => {
+  const t = {
+    destinationCity: "Mirissa",
+    destinationCountry: "Sri Lanka",
+    departureDate: "2099-03-05",
+    returnDate: "",
+    maxTravelers: 4,
+    gender: "mixed" as const,
+    budgetEstimate: 900,
+    currency: "EUR" as const,
+    transport: "plane" as const,
+    theme: "Whales, beaches and surf.",
+  };
+  const actor = { id: "org-1", name: "Olga", role: "user" as const };
+  const before = (photoUrl: string | null) => ({ id: "t1", organizerId: "org-1", status: "active", photoUrl, ...t, budgetEstimate: "900.00", returnDate: null });
+
+  it("returns null when no editable trip matched", async () => {
+    reset();
+    state.result = [];
+    expect(await updateOrganizerTrip("t1", "org-1", t, actor)).toBeNull();
+    expect(state.sets).toHaveLength(0);
+  });
+
+  it("returns the previous photo URL and leaves photoUrl out of the set when none is given", async () => {
+    reset();
+    state.result = [before("https://x.test/trips/old.jpg")];
+    expect(await updateOrganizerTrip("t1", "org-1", t, actor)).toEqual({ previousPhotoUrl: "https://x.test/trips/old.jpg" });
+    expect(state.sets[0] as object).not.toHaveProperty("photoUrl");
+  });
+
+  it("sets photoUrl when one is given and reports a null previous URL", async () => {
+    reset();
+    state.result = [before(null)];
+    expect(await updateOrganizerTrip("t1", "org-1", t, actor, "https://x.test/trips/new.jpg")).toEqual({ previousPhotoUrl: null });
+    expect(state.sets[0]).toMatchObject({ photoUrl: "https://x.test/trips/new.jpg" });
   });
 });

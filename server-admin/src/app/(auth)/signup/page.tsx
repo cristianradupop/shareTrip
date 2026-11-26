@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SignUpForm } from "@/components/auth/signup-form";
+import { safeNext } from "@/lib/safe-next";
 import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Create an account" };
 
 export default async function SignUpPage({ searchParams }: PageProps<"/signup">) {
-  if (await getSession()) redirect("/");
   const { next } = await searchParams;
+  // Already signed in (also right after the form signs in and refreshes): go where the visitor was heading.
+  const session = await getSession();
+  if (session) {
+    const home = (session.user as { role?: string }).role === "admin" ? "/admin" : "/";
+    redirect(safeNext(typeof next === "string" ? next : undefined) ?? home);
+  }
 
   return (
     <>

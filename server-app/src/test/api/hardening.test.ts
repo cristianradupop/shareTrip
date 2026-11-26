@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { session as sessionTable } from "@/db/schema";
-import { adminSession, ctx, reset, send, signUpEmail, state, userSession } from "../helpers";
+import { adminSession, ctx, jpgFile, reset, send, sendForm, signUpEmail, state, userSession } from "../helpers";
 
 const upload = vi.hoisted(() => vi.fn(async () => ({ ok: true as const, url: "https://x.test/p.jpg" })));
+const uploadTrip = vi.hoisted(() => vi.fn(async () => ({ ok: true as const, url: "https://x.test/trips/t.jpg" })));
+const deleteTrip = vi.hoisted(() => vi.fn(async () => undefined));
 const createUser = vi.hoisted(() => vi.fn(async () => undefined));
 const consumeLimit = vi.hoisted(() => vi.fn(async () => ({ allowed: true as const })));
 
@@ -13,7 +15,12 @@ vi.mock("@/lib/signup-limit", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/signup-limit")>()),
   consumeSignupAttempt: consumeLimit,
 }));
-vi.mock("@/lib/storage", () => ({ uploadProfilePhoto: upload, deleteProfilePhoto: vi.fn(async () => undefined) }));
+vi.mock("@/lib/storage", () => ({
+  uploadProfilePhoto: upload,
+  deleteProfilePhoto: vi.fn(async () => undefined),
+  uploadTripPhoto: uploadTrip,
+  deleteTripPhoto: deleteTrip,
+}));
 vi.mock("@/lib/user-service", () => ({ createCredentialUser: createUser }));
 
 // @/data/requests is mocked (names and shapes: see join.test.ts); defaults are set in beforeEach so every
@@ -126,14 +133,14 @@ const cases: Case[] = [
   },
   {
     name: "POST /api/trips",
-    call: (h = {}) => (trips.POST as Handler)(withHeaders(send("POST", "/api/trips", trip()), h)),
+    call: (h = {}) => (trips.POST as Handler)(withHeaders(sendForm("POST", "/api/trips", trip(), jpgFile()), h)),
     ok: true,
   },
   {
     name: "PATCH /api/trips/[id]",
     call: (h = {}) =>
       (tripById.PATCH as Handler)(
-        withHeaders(send("PATCH", `/api/trips/${TRIP_ID}`, trip()), h),
+        withHeaders(sendForm("PATCH", `/api/trips/${TRIP_ID}`, trip(), jpgFile()), h),
         ctx(TRIP_ID),
       ),
     ok: true,
@@ -207,6 +214,8 @@ const cases: Case[] = [
 beforeEach(() => {
   reset();
   upload.mockClear();
+  uploadTrip.mockClear();
+  deleteTrip.mockClear();
   createUser.mockClear();
   consumeLimit.mockClear();
   for (const fn of Object.values(reqs)) fn.mockReset();
@@ -240,6 +249,7 @@ describe("same-origin check on mutating handlers", () => {
     expect(state.updates).toHaveLength(0);
     expect(state.deletes).toHaveLength(0);
     expect(upload).not.toHaveBeenCalled();
+    expect(uploadTrip).not.toHaveBeenCalled();
     expect(signUpEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
     expect(consumeLimit).not.toHaveBeenCalled();
@@ -261,12 +271,30 @@ describe("same-origin check on mutating handlers", () => {
 
 describe("JSON handlers require application/json", () => {
   const bad = { "content-type": "text/plain" };
-  it.each(cases.filter((c) => !c.noBody && !c.name.includes("signup") && !c.name.startsWith("DELETE")))(
+  it.each(
+    cases.filter(
+      (c) => !c.noBody && !c.name.includes("signup") && !c.name.startsWith("DELETE") && !c.name.includes("/api/trips"),
+    ),
+  )(
     "$name returns 415 for text/plain",
     async ({ call }) => {
       const res = await call(bad);
       expect(res.status).toBe(415);
       expect(await res.json()).toMatchObject({ ok: false, error: expect.any(String) });
+      expect(state.inserts).toHaveLength(0);
+      expect(state.updates).toHaveLength(0);
+    },
+  );
+});
+
+describe("trip handlers require multipart/form-data", () => {
+  it.each(cases.filter((c) => c.name === "POST /api/trips" || c.name === "PATCH /api/trips/[id]"))(
+    "$name returns 415 for text/plain",
+    async ({ call }) => {
+      const res = await call({ "content-type": "text/plain" });
+      expect(res.status).toBe(415);
+      expect(await res.json()).toMatchObject({ ok: false, error: expect.any(String) });
+      expect(uploadTrip).not.toHaveBeenCalled();
       expect(state.inserts).toHaveLength(0);
       expect(state.updates).toHaveLength(0);
     },

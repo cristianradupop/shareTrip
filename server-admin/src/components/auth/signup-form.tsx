@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, ImagePlus } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { FormField } from "@/components/form-field";
@@ -32,7 +31,6 @@ const GENDERS = [
 ];
 
 export function SignUpForm({ next }: { next?: string }) {
-  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -87,8 +85,8 @@ export function SignUpForm({ next }: { next?: string }) {
     trackInteraction("signup");
     setCreated(true);
     setTimeout(() => {
-      router.push(safeNext(next) ?? "/");
-      router.refresh();
+      // Full page load, as in the login form (push + refresh raced with the /signup redirect).
+      window.location.assign(safeNext(next) ?? "/");
     }, 2200);
   }
 

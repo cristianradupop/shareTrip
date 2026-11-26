@@ -32,7 +32,7 @@ export function FeedTripCard({ trip, isNew, action }: { trip: FeedTrip; isNew?: 
       )}
     >
       <div className={cn("relative isolate flex min-h-48 flex-col justify-between overflow-hidden rounded-[1.35rem] bg-gradient-to-br p-4 text-white", view.gradient)}>
-        <TripCover seed={trip.city} sizes="(max-width: 640px) 100vw, 240px" className="-z-20 transition-transform duration-700 group-hover:scale-105" />
+        <TripCover seed={trip.city} photoUrl={trip.photoUrl} sizes="(max-width: 640px) 100vw, 240px" className="-z-20 transition-transform duration-700 group-hover:scale-105" />
         <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
         <div className="flex flex-wrap items-center gap-2">
           {isNew && <Badge className="bg-primary text-primary-foreground">New</Badge>}

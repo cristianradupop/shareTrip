@@ -9,15 +9,15 @@ import { Button } from "@/components/ui/button";
 import type { OrganizerTrip, TripInput } from "server-app/shared";
 import { trackInteraction } from "@/lib/analytics";
 import { clientFetch } from "@/lib/client-api";
-import { toTripFormValues } from "@/lib/trip-form";
+import { toTripFormData, toTripFormValues } from "@/lib/trip-form";
 
 /** "Edit" button + the pre-filled "Edit trip" pop-up. */
 export function EditTripButton({ trip }: { trip: OrganizerTrip }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
-  async function onSubmit(values: TripInput) {
-    const result = await clientFetch(`/api/trips/${trip.id}`, { method: "PATCH", json: values });
+  async function onSubmit(values: TripInput, photo: File | null) {
+    const result = await clientFetch(`/api/trips/${trip.id}`, { method: "PATCH", form: toTripFormData(values, photo) });
     if (!result.ok) return result.error;
     trackInteraction("trip_edited");
     toast.success("Trip updated");
@@ -43,6 +43,7 @@ export function EditTripButton({ trip }: { trip: OrganizerTrip }) {
         submitLabel="Save"
         pendingLabel="Saving…"
         initialValues={toTripFormValues(trip)}
+        currentPhotoUrl={trip.photoUrl}
         requireChanges
         discard={{
           title: "Discard changes?",

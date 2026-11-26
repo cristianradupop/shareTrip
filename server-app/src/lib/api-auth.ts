@@ -51,6 +51,12 @@ export function requireJson(req: Request): Response | null {
   return type === "application/json" ? null : jsonError("Content-Type must be application/json", 415);
 }
 
+/** 415 unless the body is declared as multipart/form-data. */
+export function requireMultipart(req: Request): Response | null {
+  const type = req.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  return type === "multipart/form-data" ? null : jsonError("Content-Type must be multipart/form-data", 415);
+}
+
 /** Parses a JSON body; null when it is missing or malformed. */
 export async function readJson(req: Request): Promise<unknown> {
   try {

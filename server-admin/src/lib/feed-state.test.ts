@@ -19,6 +19,7 @@ const t = (id: string): FeedTrip =>
     joined: 0,
     organizerName: "Ana P.",
     organizerImage: null,
+    photoUrl: null,
     status: "active",
   }) satisfies FeedTrip;
 const ids = (xs: FeedTrip[]) => xs.map((x) => x.id);

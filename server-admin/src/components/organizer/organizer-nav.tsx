@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import { UserAvatar, useLogout } from "@/components/user-menu";
+import { LogoutButton, UserAvatar, useLogout } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -59,9 +59,10 @@ function NavList({ onNavigate, pendingRequests = 0 }: { onNavigate?: () => void;
           </Link>
         );
       })}
+      <div aria-hidden className="mx-4 my-2 h-px bg-sidebar-border" />
       <button
         onClick={logout}
-        className="mt-auto flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
       >
         <LogOut className="size-5" /> Logout
       </button>
@@ -106,6 +107,7 @@ export function OrganizerShell({
         <div className="flex items-center justify-end gap-3 px-5 pt-4 md:px-8 md:pt-6">
           <ThemeToggle className="rounded-full" />
           <UserAvatar name={user.name} image={user.image} className="size-9" />
+          <LogoutButton className="h-9 rounded-full px-4 max-md:hidden" />
         </div>
         <main className="px-4 pb-12 pt-2 md:px-8">{children}</main>
       </div>
