@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/api-auth";
@@ -13,10 +13,27 @@ import {
   type RequestStatus,
   type RuleResult,
 } from "@/lib/join-rules";
+import type { JoinerRequest } from "@/shared/types";
 
 const asGender = (g: string | null): AccountGender | null => (g === "male" || g === "female" ? g : null);
 
 export type Person = { userId: string; name: string; image: string | null; age: number; gender: AccountGender | null };
+
+export async function getJoinerRequests(joinerId: string): Promise<JoinerRequest[]> {
+  return db
+    .select({
+      tripId: tripRequests.tripId,
+      status: tripRequests.status,
+      destinationCity: trips.destinationCity,
+      destinationCountry: trips.destinationCountry,
+      departureDate: trips.departureDate,
+      returnDate: trips.returnDate,
+    })
+    .from(tripRequests)
+    .innerJoin(trips, eq(trips.id, tripRequests.tripId))
+    .where(eq(tripRequests.userId, joinerId))
+    .orderBy(desc(tripRequests.createdAt));
+}
 
 /** Everything the join rules need about one trip and one user. Null when the trip does not exist. */
 export async function loadJoinContext(tripId: string, userId: string): Promise<JoinContext | null> {

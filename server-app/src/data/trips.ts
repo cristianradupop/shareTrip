@@ -1,12 +1,12 @@
 import "server-only";
-import { and, count, desc, eq, getTableColumns, gt, gte, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, getTableColumns, gt, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
 import { buildEvent, changedFields, recordEvent, tripSubject, type Actor } from "@/lib/audit";
 import { encodeFeedCursor } from "@/lib/feed-params";
 import { isTripFull, viewerJoinState, type AccountGender, type RequestStatus } from "@/lib/join-rules";
 import type { TripInput } from "@/lib/validators";
-import type { FeedTrip, OrganizerStats, OrganizerTrip } from "@/shared/types";
+import type { FeedTrip, JoinerOverview, JoinerTrip, OrganizerStats, OrganizerTrip } from "@/shared/types";
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
@@ -111,6 +111,48 @@ export async function getOrganizerStats(organizerId: string): Promise<OrganizerS
     .leftJoin(pendingCounts, eq(pendingCounts.tripId, trips.id))
     .where(eq(trips.organizerId, organizerId));
   return row ?? { trips: 0, participants: 0, upcoming: 0, pendingRequests: 0 };
+}
+
+// ---------------- Joiner dashboard ----------------
+
+export async function getJoinerOverview(joinerId: string): Promise<JoinerOverview> {
+  const [[tripCounts], [requestCounts]] = await Promise.all([
+    db.select({ trips: count() }).from(tripMembers).where(eq(tripMembers.userId, joinerId)),
+    db
+      .select({
+        pending: sql<number>`count(*) filter (where ${tripRequests.status} = 'pending')`.mapWith(Number),
+        approved: sql<number>`count(*) filter (where ${tripRequests.status} = 'approved')`.mapWith(Number),
+        declined: sql<number>`count(*) filter (where ${tripRequests.status} = 'declined')`.mapWith(Number),
+      })
+      .from(tripRequests)
+      .where(eq(tripRequests.userId, joinerId)),
+  ]);
+  return {
+    trips: tripCounts?.trips ?? 0,
+    requests: {
+      pending: requestCounts?.pending ?? 0,
+      approved: requestCounts?.approved ?? 0,
+      declined: requestCounts?.declined ?? 0,
+    },
+  };
+}
+
+export async function getJoinerTrips(joinerId: string): Promise<JoinerTrip[]> {
+  return db
+    .select({
+      id: trips.id,
+      destinationCity: trips.destinationCity,
+      destinationCountry: trips.destinationCountry,
+      departureDate: trips.departureDate,
+      returnDate: trips.returnDate,
+      organizerName: sql<string>`${user.firstName} || ' ' || left(${user.lastName}, 1) || '.'`,
+      status: trips.status,
+    })
+    .from(tripMembers)
+    .innerJoin(trips, eq(trips.id, tripMembers.tripId))
+    .innerJoin(user, eq(user.id, trips.organizerId))
+    .where(eq(tripMembers.userId, joinerId))
+    .orderBy(asc(trips.departureDate), asc(trips.id));
 }
 
 // ---------------- Community feed ----------------

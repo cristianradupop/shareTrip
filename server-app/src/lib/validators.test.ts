@@ -102,6 +102,22 @@ describe("profileSchema", () => {
     expect(profileSchema.safeParse({ gender }).success).toBe(true);
   });
 
+  it("accepts partial edits to the editable profile fields", () => {
+    const result = profileSchema.safeParse({ firstName: " Alex ", address: "Cluj" });
+    expect(result.success && result.data).toMatchObject({ firstName: "Alex", address: "Cluj" });
+  });
+
+  it("validates phone numbers and non-empty names", () => {
+    expect(profileSchema.safeParse({ phone: "not a phone" }).success).toBe(false);
+    expect(profileSchema.safeParse({ firstName: " " }).success).toBe(false);
+  });
+
+  it("rejects an empty edit and strips read-only account fields", () => {
+    expect(profileSchema.safeParse({}).success).toBe(false);
+    const result = profileSchema.safeParse({ firstName: "Alex", username: "changed", email: "changed@test.dev" });
+    expect(result.success && result.data).toEqual({ firstName: "Alex" });
+  });
+
   it.each([{}, { gender: "mixed" }, { gender: "" }, { gender: 1 }])("rejects %j", (body) => {
     expect(profileSchema.safeParse(body).success).toBe(false);
   });

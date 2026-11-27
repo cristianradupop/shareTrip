@@ -39,7 +39,15 @@ export const signUpSchema = z.object({
 });
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
-export const profileSchema = z.object({ gender: accountGender });
+export const profileSchema = z
+  .object({
+    firstName: signUpSchema.shape.firstName.optional(),
+    lastName: signUpSchema.shape.lastName.optional(),
+    phone: signUpSchema.shape.phone.optional(),
+    address: signUpSchema.shape.address.optional(),
+    gender: accountGender.optional(),
+  })
+  .refine((profile) => Object.keys(profile).length > 0, "Provide at least one profile field");
 export type ProfileInput = z.infer<typeof profileSchema>;
 
 export const loginSchema = z.object({
