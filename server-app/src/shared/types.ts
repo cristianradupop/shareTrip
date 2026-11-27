@@ -53,6 +53,34 @@ export type OrganizerStats = {
   pendingRequests: number;
 };
 
+export type JoinerOverview = {
+  trips: number;
+  requests: { pending: number; approved: number; declined: number };
+};
+
+export type JoinerOverviewResponse = { overview: JoinerOverview };
+
+export type JoinerTrip = {
+  id: string;
+  destinationCity: string;
+  destinationCountry: string;
+  departureDate: string;
+  returnDate: string | null;
+  organizerName: string;
+  status: "active" | "full" | "cancelled";
+};
+
+export type JoinerRequest = {
+  tripId: string;
+  status: "pending" | "approved" | "declined";
+  destinationCity: string;
+  destinationCountry: string;
+  departureDate: string;
+  returnDate: string | null;
+};
+
+export type JoinerTripsResponse = { trips: JoinerTrip[]; requests: JoinerRequest[] };
+
 export type AdminUserRow = {
   id: string;
   username: string | null;
