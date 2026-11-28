@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
@@ -28,9 +28,13 @@ export async function getJoinerRequests(joinerId: string): Promise<JoinerRequest
       destinationCountry: trips.destinationCountry,
       departureDate: trips.departureDate,
       returnDate: trips.returnDate,
+      photoUrl: trips.photoUrl,
+      organizerImage: user.image,
+      organizerName: sql<string>`${user.firstName} || ' ' || left(${user.lastName}, 1) || '.''`,
     })
     .from(tripRequests)
     .innerJoin(trips, eq(trips.id, tripRequests.tripId))
+    .innerJoin(user, eq(user.id, trips.organizerId))
     .where(eq(tripRequests.userId, joinerId))
     .orderBy(desc(tripRequests.createdAt));
 }
@@ -242,3 +246,4 @@ export async function declineRequest(tripId: string, userId: string, actor: Acto
     return true;
   });
 }
+
