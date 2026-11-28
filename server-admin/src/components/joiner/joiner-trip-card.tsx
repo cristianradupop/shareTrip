@@ -3,9 +3,9 @@ import type { JoinerTrip } from "server-app/shared";
 import { formatDateRange } from "@/lib/format";
 
 const statusStyles: Record<JoinerTrip["status"], string> = {
-  active: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  full: "bg-primary/10 text-primary",
-  cancelled: "bg-destructive/10 text-destructive",
+  active: "bg-white/20 text-white",
+  full: "bg-white/20 text-white",
+  cancelled: "bg-white/20 text-white",
 };
 
 export function JoinerTripCard({ trip }: { trip: JoinerTrip }) {
@@ -14,14 +14,15 @@ export function JoinerTripCard({ trip }: { trip: JoinerTrip }) {
   return (
     <article className="overflow-hidden rounded-[1.5rem] bg-card ring-1 ring-border transition-shadow hover:shadow-lg hover:shadow-black/5">
       <div className="relative isolate flex min-h-40 flex-col justify-between overflow-hidden bg-ink p-5 text-white">
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,oklch(0.64_0.205_19/0.55),transparent_60%)]" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-cover bg-center" style={trip.photoUrl ? { backgroundImage: `url(${trip.photoUrl})` } : undefined} />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="flex items-start justify-between gap-3">
           <span className="flex size-10 items-center justify-center rounded-full bg-white/10"><MapPin className="size-5 text-primary" /></span>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[trip.status]}`}>{label}</span>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-sm ${statusStyles[trip.status]}`}>{label}</span>
         </div>
         <div>
           <h3 className="text-2xl font-semibold leading-tight">{trip.destinationCity}</h3>
-          <p className="text-sm text-white/65">{trip.destinationCountry}</p>
+          <p className="text-sm text-white/80">{trip.destinationCountry}</p>
         </div>
       </div>
       <dl className="grid gap-3 p-5 text-sm sm:grid-cols-2">
