@@ -1,11 +1,11 @@
-import { CalendarDays, MapPin, Users } from "lucide-react";
+﻿import { CalendarDays, MapPin, Users } from "lucide-react";
 import type { JoinerTrip } from "server-app/shared";
 import { formatDateRange } from "@/lib/format";
 
 const statusStyles: Record<JoinerTrip["status"], string> = {
-  active: "bg-white/20 text-white",
-  full: "bg-white/20 text-white",
-  cancelled: "bg-white/20 text-white",
+  active: "bg-black/30 text-white backdrop-blur-sm",
+  full: "bg-black/30 text-white backdrop-blur-sm",
+  cancelled: "bg-black/30 text-white backdrop-blur-sm",
 };
 
 export function JoinerTripCard({ trip }: { trip: JoinerTrip }) {
@@ -38,3 +38,5 @@ export function JoinerTripCard({ trip }: { trip: JoinerTrip }) {
     </article>
   );
 }
+
+

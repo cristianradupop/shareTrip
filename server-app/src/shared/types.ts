@@ -78,9 +78,12 @@ export type JoinerRequest = {
   destinationCountry: string;
   departureDate: string;
   returnDate: string | null;
+  photoUrl: string | null;
+  organizerImage: string | null;
+  organizerName: string;
 };
 
-export type JoinerTripsResponse = { trips: JoinerTrip[]; requests: JoinerRequest[] };
+export type JoinerTripsResponse = { trips: JoinerTrip[]; requests: JoinerRequest[]; suggestedTrips: FeedTrip[] };
 
 export type AdminUserRow = {
   id: string;

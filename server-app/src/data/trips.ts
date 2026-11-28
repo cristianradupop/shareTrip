@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { and, asc, count, desc, eq, getTableColumns, gt, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
@@ -307,3 +307,29 @@ export async function getActiveCities(scope: FeedScope = {}) {
     .orderBy(sql`min(${trips.destinationCity})`);
   return rows.map((r) => r.city);
 }
+
+
+/** Suggested trips for a joiner with no upcoming trips: random public trips excluding their own memberships. */
+export async function getSuggestedTrips(joinerId: string, limit: number = 3): Promise<FeedTrip[]> {
+  const rows = await db
+    .select({ ...feedColumns, ...viewerColumns() })
+    .from(trips)
+    .innerJoin(user, eq(user.id, trips.organizerId))
+    .leftJoin(joinedCounts, eq(joinedCounts.tripId, trips.id))
+    .where(
+      and(
+        inArray(trips.status, ["active", "full"]),
+        gte(trips.departureDate, todayIso()),
+        sql`not exists (
+          select 1 from ${tripMembers} where ${tripMembers.tripId} = ${trips.id} and ${tripMembers.userId} = ${joinerId}
+        )`,
+        sql`not exists (
+          select 1 from ${tripRequests} where ${tripRequests.tripId} = ${trips.id} and ${tripRequests.userId} = ${joinerId}
+        )`
+      )
+    )
+    .orderBy(sql`random()`)
+    .limit(limit);
+  return rows.map((r) => toFeedTrip(r));
+}
+

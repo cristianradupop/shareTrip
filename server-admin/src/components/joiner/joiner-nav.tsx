@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { ArrowUpRight, Compass, LayoutDashboard, LogOut, Menu, Plane, UserRound, X } from "lucide-react";
 import Link from "next/link";
@@ -45,14 +45,14 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         href="/#trips"
         onClick={onNavigate}
-        className="flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-primary/8 hover:text-foreground"
       >
         <ArrowUpRight className="size-5" /> Discover trips
       </Link>
       <button
         type="button"
         onClick={() => void logout()}
-        className="flex items-center gap-3 rounded-full px-4 py-3 text-left text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        className="flex items-center gap-3 rounded-full px-4 py-3 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-primary/8 hover:text-foreground"
       >
         <LogOut className="size-5" /> Logout
       </button>

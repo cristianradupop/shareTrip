@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { beforeEach, describe, expect, it, vi } from "vitest";
 import { get, reset, state, userSession } from "../helpers";
 
 const queries = vi.hoisted(() => ({
   getJoinerOverview: vi.fn(),
   getJoinerTrips: vi.fn(),
   getJoinerRequests: vi.fn(),
+  getSuggestedTrips: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -14,6 +15,7 @@ vi.mock("@/data/trips", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/data/trips")>()),
   getJoinerOverview: queries.getJoinerOverview,
   getJoinerTrips: queries.getJoinerTrips,
+  getSuggestedTrips: queries.getSuggestedTrips,
 }));
 vi.mock("@/data/requests", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/data/requests")>()),
@@ -63,6 +65,7 @@ beforeEach(() => {
   });
   queries.getJoinerTrips.mockReset().mockResolvedValue([]);
   queries.getJoinerRequests.mockReset().mockResolvedValue([]);
+  queries.getSuggestedTrips.mockReset().mockResolvedValue([]);
 });
 
 describe("GET /api/joiner/overview", () => {
@@ -116,6 +119,7 @@ describe("GET /api/joiner/trips", () => {
   it("lists approved memberships and requests in every status, scoped to the session user", async () => {
     queries.getJoinerTrips.mockResolvedValue([TRIP]);
     queries.getJoinerRequests.mockResolvedValue(requestRows);
+    queries.getSuggestedTrips.mockResolvedValue([]);
 
     const res = await call("trips", "?userId=other-user");
 
@@ -147,3 +151,6 @@ describe("GET /api/joiner/trips", () => {
     expect(queries.getJoinerRequests).not.toHaveBeenCalled();
   });
 });
+
+
+

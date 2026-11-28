@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Compass, Plane, UserRound } from "lucide-react";
+﻿import { ArrowRight, CalendarDays, Compass, Plane, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinerRequestCard } from "@/components/joiner/joiner-request-card";
@@ -30,8 +30,7 @@ export default async function JoinerPage() {
       </section>
 
       <section aria-label="Joiner activity summary" className="grid gap-4 sm:grid-cols-3">
-        <SummaryCard icon={<Plane className="size-5" />} value={overview.trips} label="Trips you're joining" href="/joiner/trips" tone="card" />
-        <SummaryCard icon={<CalendarDays className="size-5" />} value={upcoming.length} label="Upcoming adventures" href="/joiner/trips" tone="primary" />
+        <SummaryCard icon={<Plane className="size-5" />} value={overview.trips} label="Trips you're joining" href="/joiner/trips" tone="primary" />\r\n        <SummaryCard icon={<CalendarDays className="size-5" />} value={upcoming.length} label="Upcoming adventures" href="/joiner/trips" tone="primary" />
         <SummaryCard icon={<Compass className="size-5" />} value={overview.requests.pending} label="Requests awaiting a reply" href="/joiner/requests" tone="card" />
       </section>
 
@@ -82,3 +81,5 @@ function SummaryCard({ icon, value, label, href, tone }: { icon: React.ReactNode
     </Link>
   );
 }
+
+
