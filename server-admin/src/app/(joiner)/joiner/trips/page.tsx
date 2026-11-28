@@ -1,4 +1,4 @@
-﻿import { Compass } from "lucide-react";
+import { Compass } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JoinerTripCard } from "@/components/joiner/joiner-trip-card";
@@ -18,6 +18,7 @@ const EXAMPLE_TRIPS: JoinerTrip[] = [
     returnDate: "2026-12-18",
     organizerName: "Ana R.",
     status: "active",
+    photoUrl: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800&h=400&fit=crop",
   },
   {
     id: "example-2",
@@ -27,6 +28,7 @@ const EXAMPLE_TRIPS: JoinerTrip[] = [
     returnDate: "2027-01-24",
     organizerName: "Mihai P.",
     status: "active",
+    photoUrl: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=400&fit=crop",
   },
   {
     id: "example-3",
@@ -36,6 +38,7 @@ const EXAMPLE_TRIPS: JoinerTrip[] = [
     returnDate: "2027-02-15",
     organizerName: "Laura M.",
     status: "active",
+    photoUrl: "https://images.unsplash.com/photo-1562883676-8c5bffe20c4d?w=800&h=400&fit=crop",
   },
 ];
 
