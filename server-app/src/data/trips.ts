@@ -1,4 +1,4 @@
-import "server-only";
+﻿import "server-only";
 import { and, asc, count, desc, eq, getTableColumns, gt, gte, inArray, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { tripMembers, tripRequests, trips, user } from "@/db/schema";
@@ -307,3 +307,4 @@ export async function getActiveCities(scope: FeedScope = {}) {
     .orderBy(sql`min(${trips.destinationCity})`);
   return rows.map((r) => r.city);
 }
+

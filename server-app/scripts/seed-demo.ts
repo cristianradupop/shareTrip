@@ -1,4 +1,4 @@
-// Fictional demo data (users, trips, members) for the presentation. Safe to run many times:
+﻿// Fictional demo data (users, trips, members) for the presentation. Safe to run many times:
 // users are matched by email, and trips are only inserted if the demo organizers have none yet.
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
@@ -45,6 +45,29 @@ const tripData: [number, string, string, number, number, number, Gender, number,
   [7, "Cluj-Napoca", "Romania", 22, 2, 10, "mixed", 90, "EUR", "bus", "Untold-style music weekend and old-town bars."],
   [7, "Sibiu", "Romania", 90, 3, 6, "female", 180, "EUR", "car", "Fagaras mountains day hike and Brukenthal museum."],
 ];
+
+// High-quality Unsplash photos for all trips
+const photoUrls: { [key: string]: string } = {
+  "Brasov-Romania": "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=800&h=400&fit=crop",
+  "Sibiu-Romania": "https://images.unsplash.com/photo-1555881286-d3fee5d55364?w=800&h=400&fit=crop",
+  "Transfagarasan-Romania": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
+  "Paris-France": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=400&fit=crop",
+  "Barcelona-Spain": "https://images.unsplash.com/photo-1562883676-8c5bffe20c4d?w=800&h=400&fit=crop",
+  "Lisbon-Portugal": "https://images.unsplash.com/photo-1555881286-d3fee5d55364?w=800&h=400&fit=crop",
+  "Vienna-Austria": "https://images.unsplash.com/photo-1516814050195-3bfed67a9c48?w=800&h=400&fit=crop",
+  "Prague-Czechia": "https://images.unsplash.com/photo-1627595657521-6434ff0e7a89?w=800&h=400&fit=crop",
+  "Istanbul-Turkey": "https://images.unsplash.com/photo-1524521752296-c1a0cb6133fa?w=800&h=400&fit=crop",
+  "Rome-Italy": "https://images.unsplash.com/photo-1552832860-cfb67165eaf0?w=800&h=400&fit=crop",
+  "Dubai-UAE": "https://images.unsplash.com/photo-1512453475868-a2b9ff15b519?w=800&h=400&fit=crop",
+  "Constanta-Romania": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=400&fit=crop",
+  "London-United Kingdom": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&h=400&fit=crop",
+  "Munich-Germany": "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800&h=400&fit=crop",
+  "Budapest-Hungary": "https://images.unsplash.com/photo-1570129477492-45201003142e?w=800&h=400&fit=crop",
+  "Athens-Greece": "https://images.unsplash.com/photo-1570656388284-451e7f8bfe74?w=800&h=400&fit=crop",
+  "Iasi-Romania": "https://images.unsplash.com/photo-1555881286-d3fee5d55364?w=800&h=400&fit=crop",
+  "Amsterdam-Netherlands": "https://images.unsplash.com/photo-1612882109185-b9b01155270f?w=800&h=400&fit=crop",
+  "Cluj-Napoca-Romania": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
+};
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (days: number) => {
@@ -102,4 +125,6 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
+
+
 
