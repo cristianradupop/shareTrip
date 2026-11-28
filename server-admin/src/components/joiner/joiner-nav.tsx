@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { ArrowUpRight, Compass, LayoutDashboard, LogOut, Menu, Plane, UserRound, X } from "lucide-react";
+import { ArrowUpRight, Bell, Compass, LayoutDashboard, LogOut, Menu, MessageCircle, Plane, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -124,7 +124,37 @@ export function JoinerShell({
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Traveler workspace</p>
             <p className="mt-1 font-medium">Welcome back, {user.firstName}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="header-right flex items-center gap-2 sm:gap-3">
+            {/* Messages Icon Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative rounded-full hover:bg-muted"
+              title="Messages"
+              aria-label="Messages"
+            >
+              <MessageCircle className="size-5" />
+              <span className="messages-badge absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                0
+              </span>
+            </Button>
+
+            {/* Notifications Icon Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative rounded-full hover:bg-muted"
+              title="Notifications"
+              aria-label="Notifications"
+            >
+              <Bell className="size-5" />
+              <span className="notifications-badge absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                0
+              </span>
+            </Button>
+
+            <div aria-hidden className="hidden h-6 w-px bg-border sm:block" />
+            
             <ThemeToggle className="rounded-full" />
             <Link href="/joiner/profile" aria-label="Open My Profile" className="hidden items-center gap-2 rounded-full p-1 pr-3 hover:bg-muted sm:flex">
               <UserAvatar name={user.name} image={user.image} className="size-9" />

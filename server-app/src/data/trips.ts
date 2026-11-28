@@ -330,6 +330,7 @@ export async function getSuggestedTrips(joinerId: string, limit: number = 3): Pr
     )
     .orderBy(sql`random()`)
     .limit(limit);
-  return rows.map((r) => toFeedTrip(r));
+  return rows.map((r) => toFeedTrip(r as FeedRow));
 }
+
 
