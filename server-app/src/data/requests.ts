@@ -30,7 +30,7 @@ export async function getJoinerRequests(joinerId: string): Promise<JoinerRequest
       returnDate: trips.returnDate,
       photoUrl: trips.photoUrl,
       organizerImage: user.image,
-      organizerName: sql<string>`${user.firstName} || ' ' || left(${user.lastName}, 1) || '.''`,
+      organizerName: sql<string>`${user.firstName} || ' ' || left(${user.lastName}, 1) || '.'`,
     })
     .from(tripRequests)
     .innerJoin(trips, eq(trips.id, tripRequests.tripId))
