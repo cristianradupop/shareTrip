@@ -34,14 +34,14 @@ function NavItems({ onNavigate }: { onNavigate?: () => void }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex items-center gap-3 rounded-full px-4 py-3 text-sm font-medium transition-colors",
-              active ? "bg-primary text-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+              active ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-primary/8 hover:text-foreground",
             )}
           >
             <Icon className="size-5" /> {label}
           </Link>
         );
       })}
-      <div aria-hidden className="mx-4 my-2 h-px bg-sidebar-border" />
+      <div aria-hidden className="mx-4 my-2 h-px bg-border" />
       <Link
         href="/#trips"
         onClick={onNavigate}
@@ -71,9 +71,9 @@ export function JoinerShell({
 
   return (
     <div className="mx-auto w-full max-w-[1920px] md:flex md:gap-4 md:p-4">
-      <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-72 shrink-0 flex-col gap-7 rounded-[2rem] bg-sidebar p-5 text-sidebar-foreground md:flex">
+      <aside className="sticky top-4 hidden h-[calc(100vh-2rem)] w-72 shrink-0 flex-col gap-7 rounded-[2rem] bg-white ring-1 ring-border p-5 text-foreground md:flex">
         <Logo className="px-2 pt-1 [&_span_span]:text-primary" href="/" />
-        <div className="flex items-center gap-3 rounded-[1.25rem] bg-white/6 p-3">
+        <div className="flex items-center gap-3 rounded-[1.25rem] bg-primary/8 p-3">
           <UserAvatar name={user.name} image={user.image} className="size-11 ring-2 ring-white/10" />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{user.name}</p>
@@ -91,7 +91,7 @@ export function JoinerShell({
         </div>
       </aside>
 
-      <div className="sticky top-0 z-30 m-3 rounded-[1.5rem] bg-sidebar text-sidebar-foreground md:hidden">
+      <div className="sticky top-0 z-30 m-3 rounded-[1.5rem] bg-white ring-1 ring-border text-foreground md:hidden">
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <Logo href="/" />
           <div className="flex items-center gap-2">
