@@ -1,5 +1,5 @@
 // JSON-safe types shared by server-app (producer) and server-admin (consumer).
-// Keep this file free of `@/` imports: server-admin type-checks it with its own alias.
+// Keep this file free of @/ imports: server-admin type-checks it with its own alias.
 
 /** What the signed-in viewer can do with a feed trip. */
 export type JoinState = "join" | "requested" | "declined" | "joined" | "full" | "wrong_gender";
@@ -68,6 +68,7 @@ export type JoinerTrip = {
   returnDate: string | null;
   organizerName: string;
   status: "active" | "full" | "cancelled";
+  photoUrl?: string | null;
 };
 
 export type JoinerRequest = {
