@@ -1,4 +1,4 @@
-// JSON-safe types shared by server-app (producer) and server-admin (consumer).
+﻿// JSON-safe types shared by server-app (producer) and server-admin (consumer).
 // Keep this file free of `@/` imports: server-admin type-checks it with its own alias.
 
 /** What the signed-in viewer can do with a feed trip. */
@@ -68,6 +68,7 @@ export type JoinerTrip = {
   returnDate: string | null;
   organizerName: string;
   status: "active" | "full" | "cancelled";
+  photoUrl?: string | null;
 };
 
 export type JoinerRequest = {
@@ -138,3 +139,4 @@ export type SessionUser = {
 };
 
 export type ApiResult<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
+
